@@ -21,7 +21,7 @@ import { PageHeader } from "@/components/dashboard/page-header"
 import { StatCard } from "@/components/dashboard/stat-card"
 
 export const metadata = {
-  title: "Overview — Coverage Dashboard",
+  title: "Overview",
   description: "Track coverage across repositories at a glance.",
 }
 
@@ -96,7 +96,7 @@ export default function OverviewPage() {
           title="Files below threshold"
           value="126"
           icon={ShieldAlertIcon}
-          delta={{ value: "-12", direction: "down" }}
+          delta={{ value: "-12", direction: "down", sentiment: "positive" }}
           description="resolved this week"
         />
         <StatCard

@@ -4,18 +4,34 @@ import { ArrowDownRightIcon, ArrowUpRightIcon } from "lucide-react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { cn } from "@/lib/utils"
 
+type TrendDirection = "up" | "down" | "neutral"
+type TrendSentiment = "positive" | "negative" | "neutral"
+
 interface StatCardProps {
   title: string
   value: string
   description?: string
   delta?: {
     value: string
-    direction: "up" | "down" | "neutral"
+    direction: TrendDirection
+    /**
+     * Controls the color treatment independently from the arrow direction.
+     * Defaults to treating "up" as positive and "down" as negative.
+     */
+    sentiment?: TrendSentiment
   }
   icon?: LucideIcon
 }
 
+function defaultSentiment(direction: TrendDirection): TrendSentiment {
+  if (direction === "up") return "positive"
+  if (direction === "down") return "negative"
+  return "neutral"
+}
+
 export function StatCard({ title, value, description, delta, icon: Icon }: StatCardProps) {
+  const sentiment = delta ? (delta.sentiment ?? defaultSentiment(delta.direction)) : "neutral"
+
   return (
     <Card>
       <CardHeader>
@@ -37,12 +53,11 @@ export function StatCard({ title, value, description, delta, icon: Icon }: StatC
             <span
               className={cn(
                 "inline-flex items-center gap-0.5 rounded-md px-1.5 py-0.5 font-medium",
-                delta.direction === "up" &&
+                sentiment === "positive" &&
                   "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
-                delta.direction === "down" &&
+                sentiment === "negative" &&
                   "bg-destructive/10 text-destructive",
-                delta.direction === "neutral" &&
-                  "bg-muted text-muted-foreground"
+                sentiment === "neutral" && "bg-muted text-muted-foreground"
               )}
             >
               {delta.direction === "up" ? (
