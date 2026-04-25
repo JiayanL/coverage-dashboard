@@ -143,6 +143,7 @@ export async function getCoverageTrend(days = 30) {
   const since = new Date(Date.now() - days * 24 * 3600 * 1000)
   const rows = await db
     .select({
+      repositoryId: coverageRun.repositoryId,
       runAt: coverageRun.runAt,
       covered: coverageRun.coveredInstructions,
       total: coverageRun.totalInstructions,
@@ -151,14 +152,35 @@ export async function getCoverageTrend(days = 30) {
     .where(gte(coverageRun.runAt, since))
     .orderBy(asc(coverageRun.runAt))
 
-  // Group runs by day, taking the last run of each day (across all repos summed).
-  type Bucket = { date: string; covered: number; total: number }
-  const byDay = new Map<string, Bucket>()
+  // For each (repo, day) keep only the latest run, then sum across repos per
+  // day. Without this dedupe, repos that ingest multiple times on the same
+  // day would be double-counted, inflating the day's overall coverage.
+  type LatestPerRepoDay = {
+    runAt: Date
+    covered: number
+    total: number
+  }
+  const latestByRepoDay = new Map<string, LatestPerRepoDay>()
   for (const row of rows) {
     const day = row.runAt.toISOString().slice(0, 10)
+    const key = `${row.repositoryId}:${day}`
+    const existing = latestByRepoDay.get(key)
+    if (!existing || row.runAt > existing.runAt) {
+      latestByRepoDay.set(key, {
+        runAt: row.runAt,
+        covered: row.covered,
+        total: row.total,
+      })
+    }
+  }
+
+  type Bucket = { date: string; covered: number; total: number }
+  const byDay = new Map<string, Bucket>()
+  for (const [key, run] of latestByRepoDay) {
+    const day = key.split(":")[1]
     const bucket = byDay.get(day) ?? { date: day, covered: 0, total: 0 }
-    bucket.covered += row.covered
-    bucket.total += row.total
+    bucket.covered += run.covered
+    bucket.total += run.total
     byDay.set(day, bucket)
   }
   return Array.from(byDay.values())

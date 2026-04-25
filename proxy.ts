@@ -1,8 +1,8 @@
 import { NextResponse, type NextRequest } from "next/server"
 
-import { AUTH_COOKIE_NAME, AUTH_TOKEN } from "@/lib/auth"
+import { AUTH_COOKIE_NAME, deriveAuthToken } from "@/lib/auth"
 
-export function proxy(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
 
   // Allow the ingest endpoint through. It is independently authenticated by a
@@ -11,8 +11,10 @@ export function proxy(request: NextRequest) {
     return NextResponse.next()
   }
 
+  const password = process.env.DASHBOARD_PASSWORD
   const cookie = request.cookies.get(AUTH_COOKIE_NAME)
-  const isAuthed = cookie?.value === AUTH_TOKEN
+  const expected = password ? await deriveAuthToken(password) : null
+  const isAuthed = !!expected && cookie?.value === expected
 
   if (isAuthed) {
     if (pathname === "/login") {

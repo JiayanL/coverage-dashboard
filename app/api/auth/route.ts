@@ -1,11 +1,13 @@
 import { NextResponse, type NextRequest } from "next/server"
 
-import { AUTH_COOKIE_NAME, AUTH_TOKEN } from "@/lib/auth"
+import { AUTH_COOKIE_NAME, deriveAuthToken } from "@/lib/auth"
 
 export async function GET(request: NextRequest) {
+  const password = process.env.DASHBOARD_PASSWORD
+  if (!password) return NextResponse.json({ authenticated: false })
+  const expected = await deriveAuthToken(password)
   const cookie = request.cookies.get(AUTH_COOKIE_NAME)
-  const authenticated = cookie?.value === AUTH_TOKEN
-  return NextResponse.json({ authenticated })
+  return NextResponse.json({ authenticated: cookie?.value === expected })
 }
 
 export async function POST(request: NextRequest) {
@@ -28,8 +30,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ success: false }, { status: 401 })
   }
 
+  const token = await deriveAuthToken(expected)
   const response = NextResponse.json({ success: true })
-  response.cookies.set(AUTH_COOKIE_NAME, AUTH_TOKEN, {
+  response.cookies.set(AUTH_COOKIE_NAME, token, {
     path: "/",
     maxAge: 60 * 60 * 24 * 7,
     sameSite: "lax",
