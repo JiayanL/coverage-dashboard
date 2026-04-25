@@ -24,6 +24,7 @@ export type RepoSummary = {
   latestRef: string | null
   latestRunAt: Date | null
   latestPct: number | null
+  latestMutationScore: number | null
   // delta vs the most recent run that is at least 7 days older.
   weekDelta: number | null
 }
@@ -73,6 +74,7 @@ export async function listRepositorySummaries(): Promise<RepoSummary[]> {
       latestRef: latest?.ref ?? null,
       latestRunAt: latest?.runAt ?? null,
       latestPct: latest?.pct ?? null,
+      latestMutationScore: latest?.mutationScore ?? null,
       weekDelta,
     })
   }
@@ -98,6 +100,9 @@ export async function getOverviewMetrics() {
     }
   }
   const averagePct = weightedTotal > 0 ? weightedCovered / weightedTotal : null
+  const mutationScore = await getWeightedMutationScore(
+    reposWithData.map((r) => r.id),
+  )
 
   // Files below threshold across the latest run of each repo.
   const threshold = DEFAULT_THRESHOLD_PCT / 100
@@ -131,12 +136,33 @@ export async function getOverviewMetrics() {
 
   return {
     averagePct,
+    mutationScore,
     reposTracked: repos.length,
     reposWithData: reposWithData.length,
     filesBelowThreshold,
     passingPct,
     threshold,
   }
+}
+
+async function getWeightedMutationScore(repoIds: number[]) {
+  let killed = 0
+  let total = 0
+  for (const id of repoIds) {
+    const latest = await db
+      .select()
+      .from(coverageRun)
+      .where(eq(coverageRun.repositoryId, id))
+      .orderBy(desc(coverageRun.runAt))
+      .limit(1)
+    const run = latest[0]
+    if (!run || run.mutationKilled === null || run.mutationTotal === null) {
+      continue
+    }
+    killed += run.mutationKilled
+    total += run.mutationTotal
+  }
+  return total > 0 ? killed / total : null
 }
 
 export async function getCoverageTrend(days = 30) {
@@ -197,6 +223,7 @@ export type RecentActivityItem = {
   sha: string
   ref: string
   pct: number
+  mutationScore: number | null
   threshold: number
   runAt: Date
   status: "passed" | "warning" | "failed"
@@ -212,6 +239,7 @@ export async function getRecentActivity(
       sha: coverageRun.sha,
       ref: coverageRun.ref,
       pct: coverageRun.pct,
+      mutationScore: coverageRun.mutationScore,
       runAt: coverageRun.runAt,
     })
     .from(coverageRun)
@@ -226,6 +254,7 @@ export async function getRecentActivity(
     sha: row.sha,
     ref: row.ref,
     pct: row.pct,
+    mutationScore: row.mutationScore,
     threshold,
     runAt: row.runAt,
     status:
@@ -243,6 +272,9 @@ export type ServiceRow = {
   covered: number
   total: number
   pct: number
+  mutationScore: number | null
+  mutationKilled: number | null
+  mutationTotal: number | null
   threshold: number
   passing: boolean
 }
@@ -300,6 +332,9 @@ export async function getServicesForRepo(
       covered: s.covered,
       total: s.total,
       pct: s.pct,
+      mutationScore: s.mutationScore,
+      mutationKilled: s.mutationKilled,
+      mutationTotal: s.mutationTotal,
       threshold,
       passing: s.pct >= threshold,
     })),
@@ -317,6 +352,9 @@ export async function getCoverageRows(): Promise<
     covered: number
     total: number
     pct: number
+    mutationScore: number | null
+    mutationKilled: number | null
+    mutationTotal: number | null
     threshold: number
     passing: boolean
   }>
@@ -330,6 +368,9 @@ export async function getCoverageRows(): Promise<
     covered: number
     total: number
     pct: number
+    mutationScore: number | null
+    mutationKilled: number | null
+    mutationTotal: number | null
     threshold: number
     passing: boolean
   }> = []
@@ -357,6 +398,9 @@ export async function getCoverageRows(): Promise<
           covered: s.covered,
           total: s.total,
           pct: s.pct,
+          mutationScore: s.mutationScore,
+          mutationKilled: s.mutationKilled,
+          mutationTotal: s.mutationTotal,
           threshold,
           passing: s.pct >= threshold,
         })
@@ -370,6 +414,9 @@ export async function getCoverageRows(): Promise<
         covered: latest[0].coveredInstructions,
         total: latest[0].totalInstructions,
         pct: latest[0].pct,
+        mutationScore: latest[0].mutationScore,
+        mutationKilled: latest[0].mutationKilled,
+        mutationTotal: latest[0].mutationTotal,
         threshold,
         passing: latest[0].pct >= threshold,
       })

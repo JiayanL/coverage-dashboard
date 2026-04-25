@@ -8,6 +8,13 @@
       "when": 1777088770687,
       "tag": "0000_strange_hedge_knight",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1777146025258,
+      "tag": "0001_familiar_the_order",
+      "breakpoints": true
     }
   ]
 }

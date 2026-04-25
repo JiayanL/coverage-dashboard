@@ -58,6 +58,9 @@ export default async function RepositoriesPage() {
                       Coverage
                     </th>
                     <th className="px-4 py-2.5 text-right font-medium">
+                      Mutation
+                    </th>
+                    <th className="px-4 py-2.5 text-right font-medium">
                       7d delta
                     </th>
                     <th className="px-4 py-2.5 text-right font-medium">
@@ -96,6 +99,9 @@ export default async function RepositoriesPage() {
                         </td>
                         <td className="px-4 py-3 text-right tabular-nums text-foreground">
                           {formatPct(repo.latestPct)}
+                        </td>
+                        <td className="px-4 py-3 text-right tabular-nums text-foreground">
+                          {formatPct(repo.latestMutationScore)}
                         </td>
                         <td className="px-4 py-3 text-right tabular-nums text-muted-foreground">
                           {repo.weekDelta === null

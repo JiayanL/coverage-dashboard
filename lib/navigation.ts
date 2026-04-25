@@ -1,6 +1,7 @@
 import {
   LayoutDashboardIcon,
   ShieldCheckIcon,
+  NetworkIcon,
   FolderGit2Icon,
   FileBarChart2Icon,
   SettingsIcon,
@@ -26,6 +27,12 @@ export const primaryNav: NavItem[] = [
     href: "/coverage",
     icon: ShieldCheckIcon,
     description: "Detailed coverage breakdown",
+  },
+  {
+    title: "Fleet",
+    href: "/fleet",
+    icon: NetworkIcon,
+    description: "Parallel Devin session triage",
   },
   {
     title: "Repositories",
