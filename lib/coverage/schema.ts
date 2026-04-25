@@ -5,12 +5,26 @@ const serviceCoverage = z.object({
   covered: z.number().int().nonnegative(),
   total: z.number().int().nonnegative(),
   pct: z.number().min(0).max(1),
+  mutation: z
+    .object({
+      killed: z.number().int().nonnegative(),
+      total: z.number().int().nonnegative(),
+      score: z.number().min(0).max(1),
+    })
+    .optional(),
 })
 
 const overall = z.object({
   covered: z.number().int().nonnegative(),
   total: z.number().int().nonnegative(),
   pct: z.number().min(0).max(1),
+  mutation: z
+    .object({
+      killed: z.number().int().nonnegative(),
+      total: z.number().int().nonnegative(),
+      score: z.number().min(0).max(1),
+    })
+    .optional(),
 })
 
 const fileCoverage = z.object({

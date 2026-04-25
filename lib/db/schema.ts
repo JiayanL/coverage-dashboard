@@ -35,6 +35,9 @@ export const coverageRun = pgTable(
     coveredInstructions: integer("covered_instructions").notNull(),
     totalInstructions: integer("total_instructions").notNull(),
     pct: doublePrecision("pct").notNull(),
+    mutationKilled: integer("mutation_killed"),
+    mutationTotal: integer("mutation_total"),
+    mutationScore: doublePrecision("mutation_score"),
     runAt: timestamp("run_at", { withTimezone: true }).notNull(),
     ingestedAt: timestamp("ingested_at", { withTimezone: true })
       .notNull()
@@ -58,6 +61,9 @@ export const coverageService = pgTable(
     covered: integer("covered").notNull(),
     total: integer("total").notNull(),
     pct: doublePrecision("pct").notNull(),
+    mutationKilled: integer("mutation_killed"),
+    mutationTotal: integer("mutation_total"),
+    mutationScore: doublePrecision("mutation_score"),
     testsRun: integer("tests_run"),
     testsPassed: integer("tests_passed"),
     testsFailed: integer("tests_failed"),

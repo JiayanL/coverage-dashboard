@@ -10,6 +10,9 @@ export async function proxy(request: NextRequest) {
   if (pathname.startsWith("/api/ingest/")) {
     return NextResponse.next()
   }
+  if (pathname.startsWith("/api/demo/") && process.env.DEMO_MODE === "1") {
+    return NextResponse.next()
+  }
 
   const password = process.env.DASHBOARD_PASSWORD
   const cookie = request.cookies.get(AUTH_COOKIE_NAME)

@@ -72,6 +72,9 @@ export default async function RepositoryDetailPage({
                       Coverage
                     </th>
                     <th className="px-4 py-2.5 text-right font-medium">
+                      Mutation
+                    </th>
+                    <th className="px-4 py-2.5 text-right font-medium">
                       Lines covered
                     </th>
                     <th className="px-4 py-2.5 text-right font-medium">
@@ -90,6 +93,9 @@ export default async function RepositoryDetailPage({
                       </td>
                       <td className="px-4 py-3 text-right tabular-nums text-foreground">
                         {formatPct(s.pct)}
+                      </td>
+                      <td className="px-4 py-3 text-right tabular-nums text-foreground">
+                        {formatPct(s.mutationScore)}
                       </td>
                       <td className="px-4 py-3 text-right tabular-nums text-muted-foreground">
                         {s.covered.toLocaleString()} /{" "}

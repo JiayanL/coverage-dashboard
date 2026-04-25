@@ -65,6 +65,9 @@ export async function POST(request: NextRequest) {
         covered: svc.covered,
         total: svc.total,
         pct: svc.pct,
+        mutationKilled: svc.mutation?.killed ?? null,
+        mutationTotal: svc.mutation?.total ?? null,
+        mutationScore: svc.mutation?.score ?? null,
         testsRun: ts?.run ?? null,
         testsPassed: ts?.passed ?? null,
         testsFailed: ts?.failed ?? null,
@@ -104,6 +107,9 @@ export async function POST(request: NextRequest) {
         coveredInstructions: payload.overall.covered,
         totalInstructions: payload.overall.total,
         pct: payload.overall.pct,
+        mutationKilled: payload.overall.mutation?.killed ?? null,
+        mutationTotal: payload.overall.mutation?.total ?? null,
+        mutationScore: payload.overall.mutation?.score ?? null,
         runAt,
       })
       .onConflictDoUpdate({
@@ -114,6 +120,9 @@ export async function POST(request: NextRequest) {
           coveredInstructions: payload.overall.covered,
           totalInstructions: payload.overall.total,
           pct: payload.overall.pct,
+          mutationKilled: payload.overall.mutation?.killed ?? null,
+          mutationTotal: payload.overall.mutation?.total ?? null,
+          mutationScore: payload.overall.mutation?.score ?? null,
           runAt,
         },
       })

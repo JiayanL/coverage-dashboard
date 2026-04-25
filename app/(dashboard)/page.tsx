@@ -2,6 +2,7 @@ import {
   CircleCheckIcon,
   GitBranchIcon,
   ShieldAlertIcon,
+  ShieldCheckIcon,
   TrendingUpIcon,
 } from "lucide-react"
 
@@ -14,6 +15,7 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
+import { AutoRefresh } from "@/components/dashboard/auto-refresh"
 import { CoverageTrendChart } from "@/components/dashboard/coverage-trend-chart"
 import { EmptyState } from "@/components/dashboard/empty-state"
 import { PageHeader } from "@/components/dashboard/page-header"
@@ -23,6 +25,7 @@ import {
   getOverviewMetrics,
   getRecentActivity,
 } from "@/lib/coverage/queries"
+import { getDemoFleetMetrics } from "@/lib/demo/metrics"
 import { formatPct, formatRelativeTime, shortSha } from "@/lib/format"
 
 export const metadata = {
@@ -38,9 +41,11 @@ export default async function OverviewPage() {
     getCoverageTrend(30),
     getRecentActivity(6),
   ])
+  const fleet = getDemoFleetMetrics()
 
   return (
     <div className="flex flex-col gap-8">
+      <AutoRefresh />
       <PageHeader
         title="Overview"
         description="A live pulse on coverage across your tracked repositories."
@@ -73,6 +78,33 @@ export default async function OverviewPage() {
           value={formatPct(metrics.passingPct, 0)}
           icon={CircleCheckIcon}
           description={`>= ${(metrics.threshold * 100).toFixed(0)}% threshold`}
+        />
+      </section>
+
+      <section
+        aria-label="Demo fleet pulse"
+        className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4"
+      >
+        <StatCard
+          title="Mutation score"
+          value={formatPct(metrics.mutationScore, 1)}
+          icon={ShieldCheckIcon}
+          description="weighted mutant kill rate"
+        />
+        <StatCard
+          title="Recommended files"
+          value={fleet.recommendations.toLocaleString()}
+          description={`${fleet.approved} approved · ${fleet.rejected} rejected`}
+        />
+        <StatCard
+          title="Fleet PRs"
+          value={fleet.openedPrs.toLocaleString()}
+          description="opened by approved parallel sessions"
+        />
+        <StatCard
+          title="Demo lift"
+          value={`+${(fleet.coverageDelta * 100).toFixed(1)}pp`}
+          description={`mutation +${(fleet.mutationDelta * 100).toFixed(1)}pp`}
         />
       </section>
 
@@ -112,6 +144,9 @@ export default async function OverviewPage() {
                       <span className="text-xs text-muted-foreground truncate">
                         {item.ref} · {shortSha(item.sha)} ·{" "}
                         {formatRelativeTime(item.runAt)}
+                        {item.mutationScore !== null
+                          ? ` · mutation ${formatPct(item.mutationScore, 0)}`
+                          : ""}
                       </span>
                     </div>
                     <Badge

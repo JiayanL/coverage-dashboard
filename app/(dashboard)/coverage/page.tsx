@@ -61,6 +61,9 @@ export default async function CoveragePage() {
                       Coverage
                     </th>
                     <th className="px-4 py-2.5 text-right font-medium">
+                      Mutation
+                    </th>
+                    <th className="px-4 py-2.5 text-right font-medium">
                       Lines covered
                     </th>
                     <th className="px-4 py-2.5 text-right font-medium">
@@ -93,6 +96,9 @@ export default async function CoveragePage() {
                       </td>
                       <td className="px-4 py-3 text-right tabular-nums text-foreground">
                         {formatPct(row.pct)}
+                      </td>
+                      <td className="px-4 py-3 text-right tabular-nums text-foreground">
+                        {formatPct(row.mutationScore)}
                       </td>
                       <td className="px-4 py-3 text-right tabular-nums text-muted-foreground">
                         {row.covered.toLocaleString()} /{" "}
