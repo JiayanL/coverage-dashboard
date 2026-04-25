@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server"
-import { eq, and } from "drizzle-orm"
+import { eq } from "drizzle-orm"
 
 import { db } from "@/lib/db/client"
 import {
@@ -56,16 +56,30 @@ export async function POST(request: NextRequest) {
     payload.display_name ?? payload.repo.split("/").pop() ?? payload.repo
   const runAt = parseTimestamp(payload.timestamp)
 
-  // Upsert repository row.
-  const existingRepo = await db
-    .select()
-    .from(repository)
-    .where(eq(repository.fullName, payload.repo))
-    .limit(1)
+  const serviceRowsBase = Object.entries(payload.services).map(
+    ([name, svc]) => {
+      const ts = payload.test_summary?.services?.[name]
+      return {
+        name,
+        lang: svc.lang,
+        covered: svc.covered,
+        total: svc.total,
+        pct: svc.pct,
+        testsRun: ts?.run ?? null,
+        testsPassed: ts?.passed ?? null,
+        testsFailed: ts?.failed ?? null,
+        testsErrors: ts?.errors ?? null,
+        testsSkipped: ts?.skipped ?? null,
+      }
+    },
+  )
 
-  let repoId: number
-  if (existingRepo.length === 0) {
-    const inserted = await db
+  // The whole ingest runs inside a single transaction so a partial failure
+  // (e.g. function timeout between deletes and inserts on re-ingest) cannot
+  // leave a coverage_run stripped of its dependent service/file rows. Both
+  // upserts use ON CONFLICT to remain race-safe under concurrent CI runs.
+  const result = await db.transaction(async (tx) => {
+    const repoRow = await tx
       .insert(repository)
       .values({
         fullName: payload.repo,
@@ -73,41 +87,14 @@ export async function POST(request: NextRequest) {
         kind: inferredKind,
         defaultBranch: "main",
       })
-      .returning({ id: repository.id })
-    repoId = inserted[0].id
-  } else {
-    repoId = existingRepo[0].id
-    await db
-      .update(repository)
-      .set({ displayName, kind: inferredKind })
-      .where(eq(repository.id, repoId))
-  }
-
-  // Upsert coverage_run by (repo, sha). Replace dependent rows on re-ingest.
-  const existingRun = await db
-    .select()
-    .from(coverageRun)
-    .where(and(eq(coverageRun.repositoryId, repoId), eq(coverageRun.sha, payload.sha)))
-    .limit(1)
-
-  let runRowId: number
-  if (existingRun.length > 0) {
-    runRowId = existingRun[0].id
-    await db
-      .update(coverageRun)
-      .set({
-        ref: payload.ref,
-        runId: payload.run_id ?? null,
-        coveredInstructions: payload.overall.covered,
-        totalInstructions: payload.overall.total,
-        pct: payload.overall.pct,
-        runAt,
+      .onConflictDoUpdate({
+        target: repository.fullName,
+        set: { displayName, kind: inferredKind },
       })
-      .where(eq(coverageRun.id, runRowId))
-    await db.delete(coverageService).where(eq(coverageService.runId, runRowId))
-    await db.delete(coverageFile).where(eq(coverageFile.runId, runRowId))
-  } else {
-    const inserted = await db
+      .returning({ id: repository.id })
+    const repoId = repoRow[0].id
+
+    const runRow = await tx
       .insert(coverageRun)
       .values({
         repositoryId: repoId,
@@ -119,56 +106,63 @@ export async function POST(request: NextRequest) {
         pct: payload.overall.pct,
         runAt,
       })
+      .onConflictDoUpdate({
+        target: [coverageRun.repositoryId, coverageRun.sha],
+        set: {
+          ref: payload.ref,
+          runId: payload.run_id ?? null,
+          coveredInstructions: payload.overall.covered,
+          totalInstructions: payload.overall.total,
+          pct: payload.overall.pct,
+          runAt,
+        },
+      })
       .returning({ id: coverageRun.id })
-    runRowId = inserted[0].id
-  }
+    const runRowId = runRow[0].id
 
-  const testSummary = payload.test_summary?.services ?? {}
-  const serviceRows = Object.entries(payload.services).map(([name, svc]) => {
-    const ts = testSummary[name]
-    return {
-      runId: runRowId,
-      name,
-      lang: svc.lang,
-      covered: svc.covered,
-      total: svc.total,
-      pct: svc.pct,
-      testsRun: ts?.run ?? null,
-      testsPassed: ts?.passed ?? null,
-      testsFailed: ts?.failed ?? null,
-      testsErrors: ts?.errors ?? null,
-      testsSkipped: ts?.skipped ?? null,
+    // Replace dependent rows for this run. Both deletes are scoped to the
+    // run id and both inserts happen inside the same transaction; if anything
+    // fails the deletes are rolled back.
+    await tx.delete(coverageService).where(eq(coverageService.runId, runRowId))
+    await tx.delete(coverageFile).where(eq(coverageFile.runId, runRowId))
+
+    if (serviceRowsBase.length > 0) {
+      await tx
+        .insert(coverageService)
+        .values(serviceRowsBase.map((s) => ({ ...s, runId: runRowId })))
     }
+
+    if (payload.files && payload.files.length > 0) {
+      const CHUNK = 500
+      for (let i = 0; i < payload.files.length; i += CHUNK) {
+        const slice = payload.files.slice(i, i + CHUNK)
+        await tx.insert(coverageFile).values(
+          slice.map((f) => ({
+            runId: runRowId,
+            serviceName: f.service,
+            path: f.path,
+            lang: f.lang,
+            covered: f.covered,
+            total: f.total,
+            pct: f.pct,
+          })),
+        )
+      }
+    }
+
+    return { repoId, runRowId }
   })
-
-  if (serviceRows.length > 0) {
-    await db.insert(coverageService).values(serviceRows)
-  }
-
-  if (payload.files && payload.files.length > 0) {
-    // Insert in chunks to keep statements small for serverless drivers.
-    const CHUNK = 500
-    for (let i = 0; i < payload.files.length; i += CHUNK) {
-      const slice = payload.files.slice(i, i + CHUNK)
-      await db.insert(coverageFile).values(
-        slice.map((f) => ({
-          runId: runRowId,
-          serviceName: f.service,
-          path: f.path,
-          lang: f.lang,
-          covered: f.covered,
-          total: f.total,
-          pct: f.pct,
-        })),
-      )
-    }
-  }
 
   return NextResponse.json({
     success: true,
-    repository: { id: repoId, full_name: payload.repo },
-    run: { id: runRowId, sha: payload.sha, ref: payload.ref, pct: payload.overall.pct },
-    services_ingested: serviceRows.length,
+    repository: { id: result.repoId, full_name: payload.repo },
+    run: {
+      id: result.runRowId,
+      sha: payload.sha,
+      ref: payload.ref,
+      pct: payload.overall.pct,
+    },
+    services_ingested: serviceRowsBase.length,
     files_ingested: payload.files?.length ?? 0,
   })
 }
