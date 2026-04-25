@@ -10,7 +10,6 @@ import {
 } from "@/components/ui/card"
 import { PageHeader } from "@/components/dashboard/page-header"
 import { demoOvernightDigest, demoPolicyRings } from "@/lib/demo/data"
-import { formatPct } from "@/lib/format"
 
 export const metadata = {
   title: "Reports",
@@ -96,17 +95,15 @@ export default function ReportsPage() {
               />
               <DigestMetric
                 label="Coverage lift"
-                value={`+${formatPct(
-                  demoOvernightDigest.projectedCoverageDelta,
-                  1,
-                )}`}
+                value={`+${(
+                  demoOvernightDigest.projectedCoverageDelta * 100
+                ).toFixed(1)}pp`}
               />
               <DigestMetric
                 label="Mutation lift"
-                value={`+${formatPct(
-                  demoOvernightDigest.projectedMutationDelta,
-                  1,
-                )}`}
+                value={`+${(
+                  demoOvernightDigest.projectedMutationDelta * 100
+                ).toFixed(1)}pp`}
               />
             </div>
 
