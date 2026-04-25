@@ -1,5 +1,4 @@
 import {
-  ActivityIcon,
   CircleCheckIcon,
   GitBranchIcon,
   ShieldAlertIcon,
@@ -7,7 +6,6 @@ import {
 } from "lucide-react"
 
 import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
 import {
   Card,
   CardContent,
@@ -16,62 +14,36 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
+import { CoverageTrendChart } from "@/components/dashboard/coverage-trend-chart"
 import { EmptyState } from "@/components/dashboard/empty-state"
 import { PageHeader } from "@/components/dashboard/page-header"
 import { StatCard } from "@/components/dashboard/stat-card"
+import {
+  getCoverageTrend,
+  getOverviewMetrics,
+  getRecentActivity,
+} from "@/lib/coverage/queries"
+import { formatPct, formatRelativeTime, shortSha } from "@/lib/format"
 
 export const metadata = {
   title: "Overview",
   description: "Track coverage across repositories at a glance.",
 }
 
-const activity = [
-  {
-    id: "run-1043",
-    repo: "web-platform",
-    message: "Coverage increased to 87.4%",
-    author: "CI",
-    timestamp: "2 minutes ago",
-    status: "passed" as const,
-  },
-  {
-    id: "run-1042",
-    repo: "payments-service",
-    message: "3 files dropped below 80% threshold",
-    author: "CI",
-    timestamp: "18 minutes ago",
-    status: "warning" as const,
-  },
-  {
-    id: "run-1041",
-    repo: "mobile-ios",
-    message: "Coverage report generated",
-    author: "CI",
-    timestamp: "1 hour ago",
-    status: "passed" as const,
-  },
-  {
-    id: "run-1040",
-    repo: "data-pipelines",
-    message: "Report failed — missing instrumentation",
-    author: "CI",
-    timestamp: "2 hours ago",
-    status: "failed" as const,
-  },
-]
+export const dynamic = "force-dynamic"
 
-export default function OverviewPage() {
+export default async function OverviewPage() {
+  const [metrics, trend, activity] = await Promise.all([
+    getOverviewMetrics(),
+    getCoverageTrend(30),
+    getRecentActivity(6),
+  ])
+
   return (
     <div className="flex flex-col gap-8">
       <PageHeader
         title="Overview"
         description="A live pulse on coverage across your tracked repositories."
-        actions={
-          <>
-            <Button variant="outline">Export</Button>
-            <Button>New report</Button>
-          </>
-        }
       />
 
       <section
@@ -80,31 +52,27 @@ export default function OverviewPage() {
       >
         <StatCard
           title="Average coverage"
-          value="84.2%"
+          value={formatPct(metrics.averagePct)}
           icon={TrendingUpIcon}
-          delta={{ value: "+1.8%", direction: "up" }}
-          description="vs. last 7 days"
+          description="weighted across tracked repos"
         />
         <StatCard
           title="Repositories tracked"
-          value="38"
+          value={String(metrics.reposTracked)}
           icon={GitBranchIcon}
-          delta={{ value: "+2", direction: "up" }}
-          description="added this week"
+          description={`${metrics.reposWithData} with ingested data`}
         />
         <StatCard
           title="Files below threshold"
-          value="126"
+          value={metrics.filesBelowThreshold.toLocaleString()}
           icon={ShieldAlertIcon}
-          delta={{ value: "-12", direction: "down", sentiment: "positive" }}
-          description="resolved this week"
+          description={`< ${(metrics.threshold * 100).toFixed(0)}% line coverage`}
         />
         <StatCard
-          title="Passing runs"
-          value="97.1%"
+          title="Passing repositories"
+          value={formatPct(metrics.passingPct, 0)}
           icon={CircleCheckIcon}
-          delta={{ value: "stable", direction: "neutral" }}
-          description="last 24 hours"
+          description={`>= ${(metrics.threshold * 100).toFixed(0)}% threshold`}
         />
       </section>
 
@@ -113,71 +81,58 @@ export default function OverviewPage() {
           <CardHeader>
             <CardTitle>Coverage trend</CardTitle>
             <CardDescription>
-              Weighted average across tracked repositories over the last 30 days.
+              Aggregate coverage across all tracked repositories over the last
+              30 days.
             </CardDescription>
           </CardHeader>
-          <CardContent>
-            <div className="flex h-64 items-center justify-center rounded-lg border border-dashed border-border bg-muted/30 text-sm text-muted-foreground">
-              <span className="inline-flex items-center gap-2">
-                <ActivityIcon className="size-4" aria-hidden="true" />
-                Chart placeholder — wire up data source
-              </span>
-            </div>
+          <CardContent className="text-primary">
+            <CoverageTrendChart data={trend} />
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader>
             <CardTitle>Recent activity</CardTitle>
-            <CardDescription>
-              Latest events from CI pipelines.
-            </CardDescription>
+            <CardDescription>Latest ingested coverage runs.</CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col gap-1 pb-2">
-            {activity.map((item, index) => (
-              <div key={item.id} className="flex flex-col gap-3">
-                {index > 0 ? <Separator /> : null}
-                <div className="flex items-start gap-3 py-1">
-                  <span
-                    className={
-                      item.status === "passed"
-                        ? "mt-1 size-2 shrink-0 rounded-full bg-emerald-500"
-                        : item.status === "warning"
-                          ? "mt-1 size-2 shrink-0 rounded-full bg-amber-500"
-                          : "mt-1 size-2 shrink-0 rounded-full bg-destructive"
-                    }
-                    aria-hidden="true"
-                  />
-                  <div className="flex min-w-0 flex-1 flex-col gap-1">
-                    <div className="flex items-center justify-between gap-2">
-                      <p className="truncate text-sm font-medium text-foreground">
+            {activity.length === 0 ? (
+              <EmptyState
+                title="No activity yet"
+                description="Coverage runs will appear here as soon as the first ingest lands."
+              />
+            ) : (
+              activity.map((item, index) => (
+                <div key={item.id} className="flex flex-col">
+                  <div className="flex items-start justify-between gap-3 py-2">
+                    <div className="flex flex-col gap-0.5 min-w-0">
+                      <span className="text-sm font-medium text-foreground truncate">
                         {item.repo}
-                      </p>
-                      <Badge variant="outline" className="shrink-0 text-xs">
-                        {item.status}
-                      </Badge>
+                      </span>
+                      <span className="text-xs text-muted-foreground truncate">
+                        {item.ref} · {shortSha(item.sha)} ·{" "}
+                        {formatRelativeTime(item.runAt)}
+                      </span>
                     </div>
-                    <p className="text-xs text-muted-foreground">
-                      {item.message}
-                    </p>
-                    <p className="text-xs text-muted-foreground/80">
-                      {item.timestamp}
-                    </p>
+                    <Badge
+                      variant={
+                        item.status === "passed"
+                          ? "secondary"
+                          : item.status === "warning"
+                            ? "outline"
+                            : "destructive"
+                      }
+                      className="shrink-0 tabular-nums"
+                    >
+                      {formatPct(item.pct)}
+                    </Badge>
                   </div>
+                  {index < activity.length - 1 ? <Separator /> : null}
                 </div>
-              </div>
-            ))}
+              ))
+            )}
           </CardContent>
         </Card>
-      </section>
-
-      <section>
-        <EmptyState
-          icon={ActivityIcon}
-          title="No coverage rules configured"
-          description="Define thresholds and notifications to automatically flag regressions."
-          action={<Button>Create your first rule</Button>}
-        />
       </section>
     </div>
   )

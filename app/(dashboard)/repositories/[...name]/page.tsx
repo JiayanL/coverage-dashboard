@@ -1,5 +1,4 @@
-import Link from "next/link"
-import { ShieldCheckIcon } from "lucide-react"
+import { notFound } from "next/navigation"
 
 import { Badge } from "@/components/ui/badge"
 import {
@@ -11,48 +10,60 @@ import {
 } from "@/components/ui/card"
 import { EmptyState } from "@/components/dashboard/empty-state"
 import { PageHeader } from "@/components/dashboard/page-header"
-import { DEFAULT_THRESHOLD_PCT, getCoverageRows } from "@/lib/coverage/queries"
-import { formatPct } from "@/lib/format"
-
-export const metadata = {
-  title: "Coverage",
-  description: "Detailed coverage breakdown by repository and service.",
-}
+import { getServicesForRepo } from "@/lib/coverage/queries"
+import { formatPct, formatRelativeTime, shortSha } from "@/lib/format"
 
 export const dynamic = "force-dynamic"
 
-export default async function CoveragePage() {
-  const rows = await getCoverageRows()
+type Params = { name: string[] }
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<Params>
+}) {
+  const { name } = await params
+  return { title: name.map(decodeURIComponent).join("/") }
+}
+
+export default async function RepositoryDetailPage({
+  params,
+}: {
+  params: Promise<Params>
+}) {
+  const { name } = await params
+  // Catch-all segment so owner/repo paths render without manual encoding.
+  const fullName = name.map(decodeURIComponent).join("/")
+  const result = await getServicesForRepo(fullName)
+  if (!result.repo) notFound()
+
+  const { repo, services, runAt, sha } = result
 
   return (
     <div className="flex flex-col gap-8">
       <PageHeader
-        title="Coverage"
-        description={`Per-service coverage, scored against a ${DEFAULT_THRESHOLD_PCT}% threshold.`}
+        title={repo.displayName}
+        description={`${repo.fullName} · ${repo.kind} · last run ${formatRelativeTime(runAt)} (${shortSha(sha)})`}
       />
 
-      {rows.length === 0 ? (
+      {services.length === 0 ? (
         <EmptyState
-          icon={ShieldCheckIcon}
-          title="No coverage runs ingested yet"
-          description="Once your CI posts to /api/ingest/coverage, services will show up here."
+          title="No coverage data yet"
+          description="Waiting for the first ingest from CI."
         />
       ) : (
         <Card>
           <CardHeader>
             <CardTitle>Services</CardTitle>
             <CardDescription>
-              Latest coverage per service across all tracked repositories.
+              Coverage for each service in the latest ingested run.
             </CardDescription>
           </CardHeader>
           <CardContent className="px-0">
             <div className="overflow-x-auto">
-              <table className="w-full min-w-[720px] text-sm">
+              <table className="w-full min-w-[640px] text-sm">
                 <thead className="border-y border-border bg-muted/30 text-xs text-muted-foreground uppercase tracking-wider">
                   <tr>
-                    <th className="px-4 py-2.5 text-left font-medium">
-                      Repository
-                    </th>
                     <th className="px-4 py-2.5 text-left font-medium">
                       Service
                     </th>
@@ -69,40 +80,24 @@ export default async function CoveragePage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
-                  {rows.map((row, idx) => (
-                    <tr
-                      key={`${row.fullName}:${row.name}:${idx}`}
-                      className="hover:bg-muted/30"
-                    >
-                      <td className="px-4 py-3 text-foreground">
-                        <Link
-                          href={`/repositories/${row.fullName
-                            .split("/")
-                            .map(encodeURIComponent)
-                            .join("/")}`}
-                          className="font-medium hover:underline"
-                        >
-                          {row.repo}
-                        </Link>
-                      </td>
+                  {services.map((s) => (
+                    <tr key={s.name} className="hover:bg-muted/30">
                       <td className="px-4 py-3 font-medium text-foreground">
-                        {row.name}
+                        {s.name}
                       </td>
                       <td className="px-4 py-3 text-muted-foreground">
-                        {row.lang}
+                        {s.lang}
                       </td>
                       <td className="px-4 py-3 text-right tabular-nums text-foreground">
-                        {formatPct(row.pct)}
+                        {formatPct(s.pct)}
                       </td>
                       <td className="px-4 py-3 text-right tabular-nums text-muted-foreground">
-                        {row.covered.toLocaleString()} /{" "}
-                        {row.total.toLocaleString()}
+                        {s.covered.toLocaleString()} /{" "}
+                        {s.total.toLocaleString()}
                       </td>
                       <td className="px-4 py-3 text-right">
-                        <Badge
-                          variant={row.passing ? "secondary" : "destructive"}
-                        >
-                          {row.passing ? "Passing" : "Below threshold"}
+                        <Badge variant={s.passing ? "secondary" : "destructive"}>
+                          {s.passing ? "Passing" : "Below threshold"}
                         </Badge>
                       </td>
                     </tr>

@@ -1,0 +1,40 @@
+import { NextResponse, type NextRequest } from "next/server"
+
+import { AUTH_COOKIE_NAME, AUTH_TOKEN } from "@/lib/auth"
+
+export function proxy(request: NextRequest) {
+  const { pathname } = request.nextUrl
+
+  // Allow the ingest endpoint through. It is independently authenticated by a
+  // bearer token and is the only route hit programmatically by CI.
+  if (pathname.startsWith("/api/ingest/")) {
+    return NextResponse.next()
+  }
+
+  const cookie = request.cookies.get(AUTH_COOKIE_NAME)
+  const isAuthed = cookie?.value === AUTH_TOKEN
+
+  if (isAuthed) {
+    if (pathname === "/login") {
+      return NextResponse.redirect(new URL("/", request.url))
+    }
+    return NextResponse.next()
+  }
+
+  if (pathname === "/login") {
+    return NextResponse.next()
+  }
+
+  if (pathname.startsWith("/api/")) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+  }
+
+  return NextResponse.redirect(new URL("/login", request.url))
+}
+
+export const config = {
+  matcher: [
+    // Match everything except static assets and the auth route handler itself.
+    "/((?!_next/static|_next/image|favicon\\.ico|api/auth).*)",
+  ],
+}
