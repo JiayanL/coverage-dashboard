@@ -102,9 +102,9 @@ export default async function OverviewPage() {
           description="opened by approved parallel sessions"
         />
         <StatCard
-          title="Demo lift"
+          title="Projected lift"
           value={`+${(fleet.coverageDelta * 100).toFixed(1)}pp`}
-          description={`mutation +${(fleet.mutationDelta * 100).toFixed(1)}pp`}
+          description={`pending PRs · mutation +${(fleet.mutationDelta * 100).toFixed(1)}pp`}
         />
       </section>
 
