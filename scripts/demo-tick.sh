@@ -40,5 +40,7 @@ else
 fi
 
 echo "POST ${url}" >&2
-curl -sS -X POST "${auth_args[@]}" "${url}"
+# `${arr[@]+...}` form: expand only when the array is set, so this stays
+# safe under `set -u` on bash < 4.4 (e.g. macOS default bash 3.2).
+curl -sS -X POST ${auth_args[@]+"${auth_args[@]}"} "${url}"
 echo
