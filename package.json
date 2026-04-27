@@ -10,7 +10,8 @@
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:push": "drizzle-kit push",
-    "verify:coverage-flow": "node scripts/verify-coverage-flow.mjs"
+    "verify:coverage-flow": "node scripts/verify-coverage-flow.mjs",
+    "seed:consumer-banking": "COVERAGE_FLOW_REPO=JiayanL/consumer-banking-platform npm run verify:coverage-flow"
   },
   "dependencies": {
     "@base-ui/react": "^1.4.1",

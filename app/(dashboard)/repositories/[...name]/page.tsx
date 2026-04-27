@@ -88,8 +88,17 @@ export default async function RepositoryDetailPage({
                 <tbody className="divide-y divide-border">
                   {services.map((s) => (
                     <tr key={s.name} className="hover:bg-muted/30">
-                      <td className="px-4 py-3 font-medium text-foreground">
-                        {s.name}
+                      <td className="px-4 py-3">
+                        <div className="flex flex-col gap-0.5">
+                          <span className="font-medium text-foreground">
+                            {s.name}
+                          </span>
+                          {s.description && (
+                            <span className="max-w-sm text-xs text-muted-foreground">
+                              {s.description}
+                            </span>
+                          )}
+                        </div>
                       </td>
                       <td className="px-4 py-3 text-muted-foreground">
                         {s.lang}

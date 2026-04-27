@@ -62,6 +62,7 @@ export async function POST(request: NextRequest) {
       return {
         name,
         lang: svc.lang,
+        description: svc.description ?? null,
         covered: svc.covered,
         total: svc.total,
         pct: svc.pct,

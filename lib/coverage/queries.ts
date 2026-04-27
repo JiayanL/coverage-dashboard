@@ -269,6 +269,7 @@ export async function getRecentActivity(
 export type ServiceRow = {
   name: string
   lang: string
+  description: string | null
   covered: number
   total: number
   pct: number
@@ -334,6 +335,7 @@ export async function getServicesForRepo(
     services: services.map((s) => ({
       name: s.name,
       lang: s.lang,
+      description: s.description,
       covered: s.covered,
       total: s.total,
       pct: s.pct,
@@ -359,6 +361,7 @@ export async function getCoverageRows(): Promise<
     fullName: string
     name: string
     lang: string
+    description: string | null
     covered: number
     total: number
     pct: number
@@ -380,6 +383,7 @@ export async function getCoverageRows(): Promise<
     fullName: string
     name: string
     lang: string
+    description: string | null
     covered: number
     total: number
     pct: number
@@ -414,6 +418,7 @@ export async function getCoverageRows(): Promise<
         fullName: r.fullName,
         name: r.displayName,
         lang: "—",
+        description: null,
         covered: latest[0].coveredInstructions,
         total: latest[0].totalInstructions,
         pct: latest[0].pct,
@@ -436,6 +441,7 @@ export async function getCoverageRows(): Promise<
         fullName: r.fullName,
         name: s.name,
         lang: s.lang,
+        description: s.description,
         covered: s.covered,
         total: s.total,
         pct: s.pct,

@@ -91,8 +91,17 @@ export default async function CoveragePage() {
                           {row.repo}
                         </Link>
                       </td>
-                      <td className="px-4 py-3 font-medium text-foreground">
-                        {row.name}
+                      <td className="px-4 py-3">
+                        <div className="flex flex-col gap-0.5">
+                          <span className="font-medium text-foreground">
+                            {row.name}
+                          </span>
+                          {row.description && (
+                            <span className="max-w-sm text-xs text-muted-foreground">
+                              {row.description}
+                            </span>
+                          )}
+                        </div>
                       </td>
                       <td className="px-4 py-3 text-muted-foreground">
                         {row.lang}
