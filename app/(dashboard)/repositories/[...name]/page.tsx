@@ -78,6 +78,9 @@ export default async function RepositoryDetailPage({
                       Lines covered
                     </th>
                     <th className="px-4 py-2.5 text-right font-medium">
+                      Tests
+                    </th>
+                    <th className="px-4 py-2.5 text-right font-medium">
                       Status
                     </th>
                   </tr>
@@ -100,6 +103,11 @@ export default async function RepositoryDetailPage({
                       <td className="px-4 py-3 text-right tabular-nums text-muted-foreground">
                         {s.covered.toLocaleString()} /{" "}
                         {s.total.toLocaleString()}
+                      </td>
+                      <td className="px-4 py-3 text-right tabular-nums text-muted-foreground">
+                        {s.testsRun === null
+                          ? "—"
+                          : `${s.testsPassed ?? 0}/${s.testsRun}`}
                       </td>
                       <td className="px-4 py-3 text-right">
                         <Badge variant={s.passing ? "secondary" : "destructive"}>

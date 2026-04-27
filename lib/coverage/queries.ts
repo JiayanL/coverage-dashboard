@@ -275,6 +275,11 @@ export type ServiceRow = {
   mutationScore: number | null
   mutationKilled: number | null
   mutationTotal: number | null
+  testsRun: number | null
+  testsPassed: number | null
+  testsFailed: number | null
+  testsErrors: number | null
+  testsSkipped: number | null
   threshold: number
   passing: boolean
 }
@@ -335,6 +340,11 @@ export async function getServicesForRepo(
       mutationScore: s.mutationScore,
       mutationKilled: s.mutationKilled,
       mutationTotal: s.mutationTotal,
+      testsRun: s.testsRun,
+      testsPassed: s.testsPassed,
+      testsFailed: s.testsFailed,
+      testsErrors: s.testsErrors,
+      testsSkipped: s.testsSkipped,
       threshold,
       passing: s.pct >= threshold,
     })),
@@ -355,6 +365,11 @@ export async function getCoverageRows(): Promise<
     mutationScore: number | null
     mutationKilled: number | null
     mutationTotal: number | null
+    testsRun: number | null
+    testsPassed: number | null
+    testsFailed: number | null
+    testsErrors: number | null
+    testsSkipped: number | null
     threshold: number
     passing: boolean
   }>
@@ -371,6 +386,11 @@ export async function getCoverageRows(): Promise<
     mutationScore: number | null
     mutationKilled: number | null
     mutationTotal: number | null
+    testsRun: number | null
+    testsPassed: number | null
+    testsFailed: number | null
+    testsErrors: number | null
+    testsSkipped: number | null
     threshold: number
     passing: boolean
   }> = []
@@ -383,29 +403,12 @@ export async function getCoverageRows(): Promise<
       .orderBy(desc(coverageRun.runAt))
       .limit(1)
     if (!latest[0]) continue
-    if (r.kind === "monorepo") {
-      const services = await db
-        .select()
-        .from(coverageService)
-        .where(eq(coverageService.runId, latest[0].id))
-        .orderBy(asc(coverageService.name))
-      for (const s of services) {
-        out.push({
-          repo: r.displayName,
-          fullName: r.fullName,
-          name: s.name,
-          lang: s.lang,
-          covered: s.covered,
-          total: s.total,
-          pct: s.pct,
-          mutationScore: s.mutationScore,
-          mutationKilled: s.mutationKilled,
-          mutationTotal: s.mutationTotal,
-          threshold,
-          passing: s.pct >= threshold,
-        })
-      }
-    } else {
+    const services = await db
+      .select()
+      .from(coverageService)
+      .where(eq(coverageService.runId, latest[0].id))
+      .orderBy(asc(coverageService.name))
+    if (services.length === 0) {
       out.push({
         repo: r.displayName,
         fullName: r.fullName,
@@ -417,8 +420,35 @@ export async function getCoverageRows(): Promise<
         mutationScore: latest[0].mutationScore,
         mutationKilled: latest[0].mutationKilled,
         mutationTotal: latest[0].mutationTotal,
+        testsRun: null,
+        testsPassed: null,
+        testsFailed: null,
+        testsErrors: null,
+        testsSkipped: null,
         threshold,
         passing: latest[0].pct >= threshold,
+      })
+      continue
+    }
+    for (const s of services) {
+      out.push({
+        repo: r.displayName,
+        fullName: r.fullName,
+        name: s.name,
+        lang: s.lang,
+        covered: s.covered,
+        total: s.total,
+        pct: s.pct,
+        mutationScore: s.mutationScore,
+        mutationKilled: s.mutationKilled,
+        mutationTotal: s.mutationTotal,
+        testsRun: s.testsRun,
+        testsPassed: s.testsPassed,
+        testsFailed: s.testsFailed,
+        testsErrors: s.testsErrors,
+        testsSkipped: s.testsSkipped,
+        threshold,
+        passing: s.pct >= threshold,
       })
     }
   }
