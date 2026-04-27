@@ -112,7 +112,7 @@ export const demoRecommendations: DemoRecommendation[] = [
   {
     rank: 5,
     service: "customer-profile-api",
-    path: "services/customer-profile-api/src/piiMasking.ts",
+    path: "services/customer-profile-api/src/masking.ts",
     owner: "Customer 360",
     ownerHandle: "@bofa/retail-accounts",
     coverage: 0.44,
@@ -285,7 +285,7 @@ export const demoOvernightDigest = {
 // zoomed in to one file before we widen out to the fleet view.
 export const demoActOneEvidence = {
   service: "customer-profile-api",
-  path: "services/customer-profile-api/src/piiMasking.ts",
+  path: "services/customer-profile-api/src/masking.ts",
   owner: "Customer 360",
   ownerHandle: "@bofa/retail-accounts",
   prTitle: "test(customer-profile-api): cover PII masking edge cases",

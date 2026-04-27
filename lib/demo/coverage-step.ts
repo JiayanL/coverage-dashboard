@@ -219,7 +219,7 @@ const FILE_HOTSPOTS: Array<{
   },
   {
     service: "customer-profile-api",
-    path: "services/customer-profile-api/src/piiMasking.ts",
+    path: "services/customer-profile-api/src/masking.ts",
     lang: "typescript",
     baseCovered: 102,
     baseTotal: 290,

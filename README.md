@@ -99,7 +99,7 @@ gated by `DEMO_MODE=1` (or a Bearer `INGEST_TOKEN`).
 
 | Surface | Page / route | What it shows |
 | --- | --- | --- |
-| Act 1 evidence card | `/` (overview) | Single-file before/after lift for `customer-profile-api/src/piiMasking.ts`. |
+| Act 1 evidence card | `/` (overview) | Single-file before/after lift for `customer-profile-api/src/masking.ts`. |
 | Coverage + mutation trend | `/` (overview) | Coverage as filled area, mutation as dashed line — same axis. |
 | Act 2 fleet triage | `/fleet` | Top 10 candidates split into Approved (7) + Rejected (3). The blocked audit-logger session is highlighted. |
 | Act 3 policy envelope | `/reports` | Inline preview + downloadable `/coverage_autonomy_policy.yaml`. |
