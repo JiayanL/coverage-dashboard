@@ -2,16 +2,21 @@
 
 import {
   Area,
-  AreaChart,
   CartesianGrid,
+  ComposedChart,
+  Legend,
+  Line,
   ResponsiveContainer,
   Tooltip,
   XAxis,
   YAxis,
 } from "recharts"
 
-type Point = { date: string; pct: number }
+type Point = { date: string; pct: number; mutationScore: number | null }
 
+// Coverage + mutation on one chart. The user-facing demo brief calls out
+// "two numbers moving together" — coverage as the filled area, mutation
+// as a dashed line on the same percentage axis.
 export function CoverageTrendChart({ data }: { data: Point[] }) {
   if (data.length === 0) {
     return (
@@ -21,11 +26,20 @@ export function CoverageTrendChart({ data }: { data: Point[] }) {
     )
   }
 
+  const series = data.map((d) => ({
+    date: d.date,
+    coverage: Number((d.pct * 100).toFixed(2)),
+    mutation:
+      d.mutationScore === null
+        ? null
+        : Number((d.mutationScore * 100).toFixed(2)),
+  }))
+
   return (
     <div className="h-64 w-full">
       <ResponsiveContainer width="100%" height="100%">
-        <AreaChart
-          data={data.map((d) => ({ ...d, pct: Number((d.pct * 100).toFixed(2)) }))}
+        <ComposedChart
+          data={series}
           margin={{ top: 8, right: 12, bottom: 0, left: 0 }}
         >
           <defs>
@@ -59,19 +73,35 @@ export function CoverageTrendChart({ data }: { data: Point[] }) {
               color: "var(--popover-foreground, black)",
               fontSize: 12,
             }}
-            formatter={(value) => [
-              `${typeof value === "number" ? value.toFixed(1) : value}%`,
-              "Coverage",
+            formatter={(value, name) => [
+              typeof value === "number" ? `${value.toFixed(1)}%` : value,
+              name === "coverage" ? "Coverage" : "Mutation",
             ]}
+          />
+          <Legend
+            wrapperStyle={{ fontSize: 11, paddingTop: 4 }}
+            iconType="plainline"
           />
           <Area
             type="monotone"
-            dataKey="pct"
+            dataKey="coverage"
+            name="Coverage"
             stroke="currentColor"
             strokeWidth={2}
             fill="url(#cov)"
           />
-        </AreaChart>
+          <Line
+            type="monotone"
+            dataKey="mutation"
+            name="Mutation"
+            stroke="currentColor"
+            strokeWidth={1.5}
+            strokeDasharray="4 3"
+            dot={false}
+            opacity={0.65}
+            connectNulls
+          />
+        </ComposedChart>
       </ResponsiveContainer>
     </div>
   )

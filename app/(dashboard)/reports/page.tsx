@@ -1,4 +1,4 @@
-import { ShieldCheckIcon } from "lucide-react"
+import { DownloadIcon, ShieldCheckIcon, ShieldXIcon } from "lucide-react"
 
 import { Badge } from "@/components/ui/badge"
 import {
@@ -21,17 +21,27 @@ export default function ReportsPage() {
     <div className="flex flex-col gap-8">
       <PageHeader
         title="Act 3 governance artifacts"
-        description="Static but credible artifacts for the autonomy teaser: policy envelope and overnight digest."
+        description="Static but credible artifacts for the autonomy teaser: policy envelope, overnight digest, downloadable YAML."
       />
 
       <section className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
         <Card>
-          <CardHeader>
-            <CardTitle>Policy envelope</CardTitle>
-            <CardDescription>
-              Four rings that convert the Act 2 human triage workflow into a
-              longer-leash scheduled system.
-            </CardDescription>
+          <CardHeader className="flex-row items-start justify-between gap-3">
+            <div>
+              <CardTitle>Policy envelope</CardTitle>
+              <CardDescription>
+                Four rings that convert the Act 2 human triage workflow into a
+                longer-leash scheduled system.
+              </CardDescription>
+            </div>
+            <a
+              href="/coverage_autonomy_policy.yaml"
+              download
+              className="inline-flex shrink-0 items-center gap-2 rounded-lg border border-border bg-muted/40 px-3 py-2 text-xs font-medium text-foreground transition hover:bg-muted"
+            >
+              <DownloadIcon className="size-4" aria-hidden="true" />
+              Download policy.yaml
+            </a>
           </CardHeader>
           <CardContent className="grid gap-3">
             {demoPolicyRings.map((ring) => (
@@ -122,6 +132,36 @@ export default function ReportsPage() {
                 {demoOvernightDigest.blockedItem.reason}
               </p>
             </div>
+
+            {demoOvernightDigest.selfRejectedSamples.length > 0 && (
+              <div className="rounded-xl border border-border bg-muted/20 p-4">
+                <div className="mb-2 flex items-center gap-2">
+                  <ShieldXIcon className="size-4 text-muted-foreground" />
+                  <Badge variant="outline">Agent self-rejected</Badge>
+                </div>
+                <ul className="flex flex-col gap-3">
+                  {demoOvernightDigest.selfRejectedSamples.map((s) => (
+                    <li key={s.sessionId} className="flex flex-col gap-1">
+                      <div className="font-mono text-[11px] text-muted-foreground">
+                        {s.sessionId}
+                      </div>
+                      <div className="text-sm font-medium text-foreground">
+                        {s.path}
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        {s.reason}
+                      </p>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            <p className="text-xs text-muted-foreground">
+              Same guardrails as Act 2, longer leash, scheduled cadence. Live
+              demo skips this &mdash; it&apos;s the artifact you point at and
+              walk away from.
+            </p>
           </CardContent>
         </Card>
       </section>
@@ -130,7 +170,8 @@ export default function ReportsPage() {
         <CardHeader>
           <CardTitle>YAML preview</CardTitle>
           <CardDescription>
-            The artifact to show in the 90-second Act 3 teaser.
+            Inline copy of the downloadable artifact. Show this in the 90-second
+            Act 3 teaser.
           </CardDescription>
         </CardHeader>
         <CardContent>

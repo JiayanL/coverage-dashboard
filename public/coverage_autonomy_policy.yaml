@@ -1,0 +1,75 @@
+# Coverage autonomy policy envelope
+# Loaded by the nightly fleet playbook. Each ring is a distinct trust
+# tier — the agent self-rejects work that doesn't fit its current ring,
+# and the digest reports any escalations.
+coverage_autonomy_policy:
+  repo: JiayanL/consumer-banking-platform
+  objective: |
+    Raise OCC-critical coverage without reducing mutation score.
+    See COMPLIANCE.md §1 for the four control points
+    (TRANSACTION_INTEGRITY, AUTHENTICATION, PII_HANDLING, AUDIT_TRAIL).
+  budget:
+    max_sessions_per_night: 50
+    max_parallel_sessions: 12
+    max_files_per_session: 3
+    max_loc_changed_per_session: 250
+  quality_gates:
+    require_tests_pass: true
+    require_coverage_delta_nonnegative: true
+    require_mutation_delta_nonnegative: true
+    require_owner_codeowners_match: true
+    forbid_production_logic_edits: true
+  rings:
+    ring0_readonly:
+      autonomy: analyze_only
+      scope:
+        - all repos
+        - DeepWiki + coverage gap analysis
+      approval: none
+    ring1_low_risk_tests:
+      autonomy: write_tests_open_pr
+      scope:
+        - pure functions
+        - fixture / data-shape tests
+        - no edits to production source files
+      approval: human_reviews_pr
+    ring2_compliance_paths:
+      autonomy: parallel_sessions_with_human_triage
+      scope:
+        - "@ComplianceCritical methods"
+        - services with stable owners
+      approval: human_approves_file_list
+      requires:
+        - happy_path_test_per_critical_method
+        - failure_path_test_per_critical_method
+    ring3_overnight:
+      autonomy: scheduled_long_horizon
+      scope:
+        - policy-filtered backlog
+        - blast-radius and budget limits enforced
+      approval: agent_self_rejects
+      escalates:
+        - policy_conflict
+        - owner_lock
+        - test_infrastructure_missing
+  hard_blocks:
+    # Things the agent must never autonomously edit, regardless of ring.
+    - token_signing_and_auth_semantics      # PLAT-1912 still open
+    - services_in_active_owner_migration    # e.g. wire-transfer-service Spring Boot 2.7 → 3.x (PLAT-1440)
+    - production_logic_edits_without_review
+    - shared_libraries:
+        - libs/encryption
+        - libs/audit-events
+        - libs/banking-models
+  rejection_reasons:
+    # Documented self-rejection patterns the digest may cite.
+    - no_test_infrastructure                # PLAT-1871 (pii-tokenization)
+    - integration_only_test_seam            # PLAT-1730-a (transaction-processor)
+    - timing_dependent_existing_tests       # PLAT-1871-b (session-manager)
+    - swallowed_failure_in_target           # PLAT-1808 (audit-logger forwarding)
+  notification:
+    digest_destinations:
+      - slack: "#coverage-fleet"
+      - email: coverage-eng@example.com
+    on_policy_block:
+      - slack: "#platform-security"

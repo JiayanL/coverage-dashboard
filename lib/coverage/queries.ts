@@ -173,6 +173,8 @@ export async function getCoverageTrend(days = 30) {
       runAt: coverageRun.runAt,
       covered: coverageRun.coveredInstructions,
       total: coverageRun.totalInstructions,
+      mutationKilled: coverageRun.mutationKilled,
+      mutationTotal: coverageRun.mutationTotal,
     })
     .from(coverageRun)
     .where(gte(coverageRun.runAt, since))
@@ -185,6 +187,8 @@ export async function getCoverageTrend(days = 30) {
     runAt: Date
     covered: number
     total: number
+    mutationKilled: number | null
+    mutationTotal: number | null
   }
   const latestByRepoDay = new Map<string, LatestPerRepoDay>()
   for (const row of rows) {
@@ -196,23 +200,39 @@ export async function getCoverageTrend(days = 30) {
         runAt: row.runAt,
         covered: row.covered,
         total: row.total,
+        mutationKilled: row.mutationKilled,
+        mutationTotal: row.mutationTotal,
       })
     }
   }
 
-  type Bucket = { date: string; covered: number; total: number }
+  type Bucket = {
+    date: string
+    covered: number
+    total: number
+    mutationKilled: number
+    mutationTotal: number
+  }
   const byDay = new Map<string, Bucket>()
   for (const [key, run] of latestByRepoDay) {
     const day = key.split(":")[1]
-    const bucket = byDay.get(day) ?? { date: day, covered: 0, total: 0 }
+    const bucket =
+      byDay.get(day) ??
+      { date: day, covered: 0, total: 0, mutationKilled: 0, mutationTotal: 0 }
     bucket.covered += run.covered
     bucket.total += run.total
+    if (run.mutationKilled !== null && run.mutationTotal !== null) {
+      bucket.mutationKilled += run.mutationKilled
+      bucket.mutationTotal += run.mutationTotal
+    }
     byDay.set(day, bucket)
   }
   return Array.from(byDay.values())
     .map((b) => ({
       date: b.date,
       pct: b.total > 0 ? b.covered / b.total : 0,
+      mutationScore:
+        b.mutationTotal > 0 ? b.mutationKilled / b.mutationTotal : null,
     }))
     .sort((a, b) => a.date.localeCompare(b.date))
 }
