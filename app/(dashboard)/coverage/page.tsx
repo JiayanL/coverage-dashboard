@@ -67,6 +67,9 @@ export default async function CoveragePage() {
                       Lines covered
                     </th>
                     <th className="px-4 py-2.5 text-right font-medium">
+                      Tests
+                    </th>
+                    <th className="px-4 py-2.5 text-right font-medium">
                       Status
                     </th>
                   </tr>
@@ -103,6 +106,11 @@ export default async function CoveragePage() {
                       <td className="px-4 py-3 text-right tabular-nums text-muted-foreground">
                         {row.covered.toLocaleString()} /{" "}
                         {row.total.toLocaleString()}
+                      </td>
+                      <td className="px-4 py-3 text-right tabular-nums text-muted-foreground">
+                        {row.testsRun === null
+                          ? "—"
+                          : `${row.testsPassed ?? 0}/${row.testsRun}`}
                       </td>
                       <td className="px-4 py-3 text-right">
                         <Badge
