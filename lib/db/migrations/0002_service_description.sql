@@ -1,0 +1,1 @@
+ALTER TABLE "coverage_service" ADD COLUMN "description" text;

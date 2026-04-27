@@ -2,6 +2,7 @@ import { z } from "zod"
 
 const serviceCoverage = z.object({
   lang: z.string().min(1),
+  description: z.string().min(1).optional(),
   covered: z.number().int().nonnegative(),
   total: z.number().int().nonnegative(),
   pct: z.number().min(0).max(1),

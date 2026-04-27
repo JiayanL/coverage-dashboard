@@ -31,6 +31,7 @@ Minimal payload:
   "services": {
     "account-service": {
       "lang": "java",
+      "description": "Spring Boot account CRUD, balance inquiry, and freeze/unfreeze lifecycle over H2.",
       "covered": 900,
       "total": 1000,
       "pct": 0.9,
@@ -88,7 +89,7 @@ To prove the complete flow locally against a running dashboard, set `DATABASE_UR
 npm run verify:coverage-flow
 ```
 
-The script posts a synthetic CI-style payload, then verifies the overview, repository, coverage, and repository detail pages render the ingested repository and services.
+The script posts a synthetic CI-style payload tailored to `JiayanL/consumer-banking-platform`, then verifies the overview, repository, coverage, and repository detail pages render the ingested repository and service rows. Use `npm run seed:consumer-banking` to reseed the notional consumer banking monorepo data explicitly.
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 

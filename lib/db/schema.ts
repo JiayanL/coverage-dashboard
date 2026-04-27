@@ -69,6 +69,7 @@ export const coverageService = pgTable(
     testsFailed: integer("tests_failed"),
     testsErrors: integer("tests_errors"),
     testsSkipped: integer("tests_skipped"),
+    description: text("description"),
   },
   (t) => [
     uniqueIndex("coverage_service_run_name_idx").on(t.runId, t.name),
