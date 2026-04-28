@@ -26,7 +26,7 @@ function pct(n: number): string {
   return `${(n * 100).toFixed(0)}%`
 }
 
-function candidateBlock(item: DemoRecommendation, dashboardUrl: string): SlackBlock[] {
+function candidateBlock(item: DemoRecommendation, dashboardUrl: string, repo: string): SlackBlock[] {
   const emoji = item.status === "approved" ? ":white_check_mark:" : ":no_entry_sign:"
   const statusLabel = item.status === "approved" ? "Approved" : "Rejected"
 
@@ -59,7 +59,7 @@ function candidateBlock(item: DemoRecommendation, dashboardUrl: string): SlackBl
         {
           type: "button",
           text: { type: "plain_text", text: "Kick off Devin" },
-          url: `https://app.devin.ai/sessions/new?prompt=${encodeURIComponent(`Write tests for ${item.path} in JiayanL/consumer-banking-platform to improve coverage from ${pct(item.coverage)} toward 80%. Follow the existing test patterns for the ${item.service} service.`)}`,
+          url: `https://app.devin.ai/sessions/new?prompt=${encodeURIComponent(`Write tests for ${item.path} in ${repo} to improve coverage from ${pct(item.coverage)} toward 80%. Follow the existing test patterns for the ${item.service} service.`)}`,
         },
       ],
     })
@@ -97,7 +97,7 @@ function buildBlocks(summary: TriageSummary): SlackBlock[] {
   ]
 
   for (const item of approved) {
-    blocks.push(...candidateBlock(item, summary.dashboardUrl))
+    blocks.push(...candidateBlock(item, summary.dashboardUrl, summary.repo))
     blocks.push({ type: "divider" })
   }
 
@@ -107,7 +107,7 @@ function buildBlocks(summary: TriageSummary): SlackBlock[] {
       elements: [{ type: "mrkdwn", text: "*Rejected candidates*" }],
     })
     for (const item of rejected) {
-      blocks.push(...candidateBlock(item, summary.dashboardUrl))
+      blocks.push(...candidateBlock(item, summary.dashboardUrl, summary.repo))
     }
     blocks.push({ type: "divider" })
   }

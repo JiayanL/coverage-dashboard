@@ -11,7 +11,12 @@ const DEFAULT_REPO = "JiayanL/consumer-banking-platform"
 
 function checkAuth(request: NextRequest): NextResponse | null {
   const expected = process.env.INGEST_TOKEN
-  if (!expected) return null
+  if (!expected) {
+    return NextResponse.json(
+      { error: "INGEST_TOKEN not configured" },
+      { status: 500 },
+    )
+  }
   const header = request.headers.get("authorization") ?? ""
   const provided = header.startsWith("Bearer ") ? header.slice(7) : ""
   if (!provided || provided !== expected) {
