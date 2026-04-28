@@ -5,9 +5,11 @@ import { AUTH_COOKIE_NAME, deriveAuthToken } from "@/lib/auth"
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
 
-  // Allow the ingest endpoint through. It is independently authenticated by a
-  // bearer token and is the only route hit programmatically by CI.
-  if (pathname.startsWith("/api/ingest/")) {
+  // Allow programmatic API endpoints through — they handle their own auth.
+  if (
+    pathname.startsWith("/api/ingest/") ||
+    pathname.startsWith("/api/triage/")
+  ) {
     return NextResponse.next()
   }
 
