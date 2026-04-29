@@ -19,8 +19,21 @@ export function DesktopSidebar() {
         collapsed ? "w-16" : "w-64"
       )}
     >
-      <div className="flex h-16 items-center border-b border-border px-4">
+      <div className="flex h-16 items-center justify-between border-b border-border px-4">
         <SidebarBrand collapsed={collapsed} />
+        <Button
+          variant="ghost"
+          size="icon-sm"
+          onClick={toggle}
+          aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+          className="shrink-0 text-muted-foreground hover:text-foreground"
+        >
+          {collapsed ? (
+            <PanelLeftOpenIcon className="size-4" />
+          ) : (
+            <PanelLeftCloseIcon className="size-4" />
+          )}
+        </Button>
       </div>
       <div className="flex flex-1 flex-col gap-6 overflow-y-auto p-4">
         <div>
@@ -33,21 +46,6 @@ export function DesktopSidebar() {
         </div>
         <Separator />
         <SidebarNav group="secondary" collapsed={collapsed} />
-      </div>
-      <div className="border-t border-border p-2">
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={toggle}
-          aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-          className="w-full"
-        >
-          {collapsed ? (
-            <PanelLeftOpenIcon className="size-4" />
-          ) : (
-            <PanelLeftCloseIcon className="size-4" />
-          )}
-        </Button>
       </div>
     </aside>
   )
