@@ -57,7 +57,7 @@ export function PlaybookForm(props: PlaybookFormProps) {
       const payload = {
         title: values.title,
         body: values.body,
-        macro: values.macro || null,
+        macro: values.macro || undefined,
       }
       if (props.mode === "create") {
         const result = await createPlaybookAction(payload)

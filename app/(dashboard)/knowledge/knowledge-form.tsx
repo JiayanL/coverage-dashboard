@@ -69,8 +69,8 @@ export function KnowledgeForm(props: KnowledgeFormProps) {
         name: values.name,
         body: values.body,
         trigger_description: values.trigger_description,
-        pinned_repo: values.pinned_repo || null,
-        parent_folder_id: values.parent_folder_id || null,
+        pinned_repo: values.pinned_repo || undefined,
+        parent_folder_id: values.parent_folder_id || undefined,
       }
       if (props.mode === "create") {
         const result = await createKnowledgeAction(payload)
