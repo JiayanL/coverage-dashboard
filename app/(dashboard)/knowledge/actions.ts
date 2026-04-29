@@ -34,6 +34,12 @@ const knowledgeSchema = z.object({
     .trim()
     .optional()
     .transform((v) => (v ? v : null)),
+  macro: z
+    .string()
+    .trim()
+    .max(64, "Macro must be 64 characters or less")
+    .optional()
+    .transform((v) => (v ? v : null)),
 })
 
 function toErrorMessage(err: unknown): string {

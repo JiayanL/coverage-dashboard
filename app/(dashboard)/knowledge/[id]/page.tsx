@@ -162,6 +162,7 @@ export default async function KnowledgeDetailPage({ params }: PageProps) {
               trigger_description: note.trigger_description,
               pinned_repo: note.pinned_repo ?? "",
               parent_folder_id: note.parent_folder_id ?? "",
+              macro: note.macro ?? "",
             }}
           />
         </CardContent>

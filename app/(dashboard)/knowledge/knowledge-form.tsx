@@ -37,6 +37,7 @@ const formSchema = z.object({
     .min(1, "Trigger description is required"),
   pinned_repo: z.string().trim(),
   parent_folder_id: z.string().trim(),
+  macro: z.string().trim().max(64, "Macro must be 64 characters or less"),
 })
 
 type FormValues = z.infer<typeof formSchema>
@@ -60,6 +61,7 @@ export function KnowledgeForm(props: KnowledgeFormProps) {
             trigger_description: "",
             pinned_repo: "",
             parent_folder_id: "",
+            macro: "",
           },
   })
 
@@ -71,6 +73,7 @@ export function KnowledgeForm(props: KnowledgeFormProps) {
         trigger_description: values.trigger_description,
         pinned_repo: values.pinned_repo || undefined,
         parent_folder_id: values.parent_folder_id || undefined,
+        macro: values.macro || undefined,
       }
       if (props.mode === "create") {
         const result = await createKnowledgeAction(payload)
@@ -192,6 +195,28 @@ export function KnowledgeForm(props: KnowledgeFormProps) {
             )}
           />
         </div>
+
+        <FormField
+          control={form.control}
+          name="macro"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Macro (optional)</FormLabel>
+              <FormControl>
+                <Input
+                  placeholder="cbp-coverage"
+                  className="font-mono"
+                  {...field}
+                />
+              </FormControl>
+              <FormDescription>
+                Slash command shortcut (e.g. /cbp-coverage). Leave blank for
+                trigger-only retrieval.
+              </FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
         <div className="flex items-center gap-2">
           <Button type="submit" disabled={isPending}>
