@@ -34,20 +34,36 @@ type ApiScope = "v1" | "v3"
 /**
  * Personal `apk_*` keys carry v1 scopes (playbooks, knowledge, sessions) but
  * are NOT granted v3 ManageOrgSchedules. Service-user `cog_*` tokens are the
- * inverse. To support both surfaces in one deployment, callers can set
- * `DEVIN_SCHEDULES_API_KEY` to a cog token specifically for v3 schedule calls
- * and keep `DEVIN_API_KEY` as the v1 token. If only one key is configured we
- * fall back to it for both scopes (existing single-key setups keep working).
+ * inverse. To support both surfaces in one deployment, set
+ *   - `DEVIN_API_KEY_V1` to an `apk_*` token for /v1/* (playbooks, knowledge,
+ *      sessions),
+ *   - `DEVIN_API_KEY_V3` to a `cog_*` token for /v3/* (schedules).
+ * Either may be omitted; both fall back to `DEVIN_API_KEY`. Single-key setups
+ * (e.g. only `DEVIN_API_KEY`) keep working for whichever scope the token
+ * carries.
  */
-function getApiKey(scope: ApiScope = "v1"): string {
+function resolveKeyForScope(scope: ApiScope): string | undefined {
+  // Use truthiness (||) rather than nullish coalescing so an accidentally
+  // empty-string env var still falls through to the next candidate.
   if (scope === "v3") {
-    const schedulesKey = process.env.DEVIN_SCHEDULES_API_KEY
-    if (schedulesKey) return schedulesKey
+    return (
+      process.env.DEVIN_API_KEY_V3 ||
+      process.env.DEVIN_API_KEY ||
+      undefined
+    )
   }
-  const key = process.env.DEVIN_API_KEY
+  return (
+    process.env.DEVIN_API_KEY_V1 ||
+    process.env.DEVIN_API_KEY ||
+    undefined
+  )
+}
+
+function getApiKey(scope: ApiScope = "v1"): string {
+  const key = resolveKeyForScope(scope)
   if (!key) {
     throw new DevinConfigError(
-      "DEVIN_API_KEY is not set. Add a personal API key (apk_*) or service user token (cog_*) to enable the Devin section.",
+      `No Devin API key configured for ${scope}. Set DEVIN_API_KEY_${scope.toUpperCase()} (or DEVIN_API_KEY as a fallback) — apk_* tokens for /v1/*, cog_* tokens for /v3/*.`,
     )
   }
   return key
@@ -83,7 +99,8 @@ function getOrgId(): string {
   // configured key — whichever one carries the org-<uuid> prefix wins.
   for (const key of [
     process.env.DEVIN_API_KEY,
-    process.env.DEVIN_SCHEDULES_API_KEY,
+    process.env.DEVIN_API_KEY_V1,
+    process.env.DEVIN_API_KEY_V3,
   ]) {
     if (!key) continue
     const derived = deriveOrgIdFromKey(key)
@@ -102,18 +119,21 @@ export function isDevinConfigured(): {
   base: boolean
   schedules: boolean
 } {
-  const baseKey = process.env.DEVIN_API_KEY
-  const schedulesKey =
-    process.env.DEVIN_SCHEDULES_API_KEY ?? process.env.DEVIN_API_KEY
+  // Mirror getApiKey() exactly (truthiness, with DEVIN_API_KEY fallback) so
+  // page gates don't disagree with the runtime fetch path.
+  const v1Key = resolveKeyForScope("v1")
+  const v3Key = resolveKeyForScope("v3")
   const hasOrg = Boolean(
     process.env.DEVIN_ORG_ID ||
-      (baseKey && deriveOrgIdFromKey(baseKey)) ||
-      (process.env.DEVIN_SCHEDULES_API_KEY &&
-        deriveOrgIdFromKey(process.env.DEVIN_SCHEDULES_API_KEY)),
+      [
+        process.env.DEVIN_API_KEY,
+        process.env.DEVIN_API_KEY_V1,
+        process.env.DEVIN_API_KEY_V3,
+      ].some((k) => k && deriveOrgIdFromKey(k)),
   )
   return {
-    base: Boolean(baseKey),
-    schedules: Boolean(schedulesKey) && hasOrg,
+    base: Boolean(v1Key),
+    schedules: Boolean(v3Key) && hasOrg,
   }
 }
 

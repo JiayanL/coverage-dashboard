@@ -59,7 +59,7 @@ export default async function SchedulesPage() {
     if (err instanceof DevinApiError) {
       const isAuthError = err.status === 401 || err.status === 403
       const message = isAuthError
-        ? "The v3 /schedules endpoint requires a service-user (cog_*) token with ManageOrgSchedules. Personal apk_user_* keys don't have v3 scopes. Set DEVIN_SCHEDULES_API_KEY to a cog_* token (keep DEVIN_API_KEY as your apk_* key for v1 playbooks/knowledge) and reload."
+        ? "The v3 /schedules endpoint requires a service-user (cog_*) token with ManageOrgSchedules. Personal apk_user_* keys don't carry v3 scopes. Set DEVIN_API_KEY_V3 to a cog_* token (DEVIN_API_KEY_V1 / DEVIN_API_KEY can stay as your apk_* key for v1 playbooks/knowledge) and reload."
         : err.body.slice(0, 320) || "No body returned."
       return (
         <div className="flex flex-col gap-8">

@@ -56,12 +56,16 @@ export default async function KnowledgePage() {
       )
     }
     if (err instanceof DevinApiError) {
+      const isAuthError = err.status === 401 || err.status === 403
+      const message = isAuthError
+        ? "The /v1/knowledge endpoint needs a personal apk_* token with knowledge scopes — cog_* service-user tokens don't carry v1 scopes. Set DEVIN_API_KEY_V1 to an apk_* token (DEVIN_API_KEY_V3 / DEVIN_API_KEY can stay as your cog_* token for v3 schedules) and reload."
+        : err.body.slice(0, 320) || "No body returned."
       return (
         <div className="flex flex-col gap-8">
           <PageHeader title="Knowledge" />
           <ApiErrorState
             title={`Devin API error ${err.status}`}
-            message={err.body.slice(0, 320) || "No body returned."}
+            message={message}
           />
         </div>
       )
