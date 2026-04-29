@@ -45,6 +45,12 @@ export function MobileSidebar() {
             </p>
             <SidebarNav group="primary" onNavigate={close} />
           </div>
+          <div>
+            <p className="px-3 pb-2 text-xs font-medium tracking-wider text-muted-foreground uppercase">
+              Control plane
+            </p>
+            <SidebarNav group="control-plane" onNavigate={close} />
+          </div>
           <Separator />
           <SidebarNav group="secondary" onNavigate={close} />
         </div>

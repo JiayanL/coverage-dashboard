@@ -15,6 +15,12 @@ export function DesktopSidebar() {
           </p>
           <SidebarNav group="primary" />
         </div>
+        <div>
+          <p className="px-3 pb-2 text-xs font-medium tracking-wider text-muted-foreground uppercase">
+            Control plane
+          </p>
+          <SidebarNav group="control-plane" />
+        </div>
         <Separator />
         <SidebarNav group="secondary" />
       </div>

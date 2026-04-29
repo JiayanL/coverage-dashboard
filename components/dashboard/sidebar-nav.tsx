@@ -4,16 +4,26 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 
 import { cn } from "@/lib/utils"
-import { primaryNav, secondaryNav } from "@/lib/navigation"
+import {
+  controlPlaneNav,
+  primaryNav,
+  secondaryNav,
+} from "@/lib/navigation"
 
 interface SidebarNavProps {
-  group: "primary" | "secondary"
+  group: "primary" | "control-plane" | "secondary"
   onNavigate?: () => void
 }
 
+const NAV_BY_GROUP = {
+  primary: primaryNav,
+  "control-plane": controlPlaneNav,
+  secondary: secondaryNav,
+} as const
+
 export function SidebarNav({ group, onNavigate }: SidebarNavProps) {
   const pathname = usePathname()
-  const items = group === "primary" ? primaryNav : secondaryNav
+  const items = NAV_BY_GROUP[group]
 
   return (
     <nav className="flex flex-col gap-1">
