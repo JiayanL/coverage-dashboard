@@ -424,7 +424,7 @@ export async function getCoverageRows(): Promise<
       out.push({
         repo: r.displayName,
         fullName: r.fullName,
-        kind: r.kind,
+        kind: "single",
         name: r.displayName,
         lang: "—",
         description: null,
