@@ -220,8 +220,10 @@ export async function getCoverageTrend(days = 30) {
 export type RecentActivityItem = {
   id: number
   repo: string
+  repoFullName: string
   sha: string
   ref: string
+  runId: string | null
   pct: number
   mutationScore: number | null
   threshold: number
@@ -236,8 +238,10 @@ export async function getRecentActivity(
     .select({
       id: coverageRun.id,
       repo: repository.displayName,
+      repoFullName: repository.fullName,
       sha: coverageRun.sha,
       ref: coverageRun.ref,
+      runId: coverageRun.runId,
       pct: coverageRun.pct,
       mutationScore: coverageRun.mutationScore,
       runAt: coverageRun.runAt,
@@ -251,8 +255,10 @@ export async function getRecentActivity(
   return rows.map((row) => ({
     id: row.id,
     repo: row.repo,
+    repoFullName: row.repoFullName,
     sha: row.sha,
     ref: row.ref,
+    runId: row.runId,
     pct: row.pct,
     mutationScore: row.mutationScore,
     threshold,
