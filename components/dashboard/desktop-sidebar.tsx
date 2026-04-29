@@ -1,22 +1,53 @@
+"use client"
+
+import { PanelLeftCloseIcon, PanelLeftOpenIcon } from "lucide-react"
+
+import { cn } from "@/lib/utils"
+import { Button } from "@/components/ui/button"
+import { Separator } from "@/components/ui/separator"
 import { SidebarBrand } from "@/components/dashboard/sidebar-brand"
 import { SidebarNav } from "@/components/dashboard/sidebar-nav"
-import { Separator } from "@/components/ui/separator"
+import { useSidebar } from "@/components/dashboard/sidebar-context"
 
 export function DesktopSidebar() {
+  const { collapsed, toggle } = useSidebar()
+
   return (
-    <aside className="hidden w-64 shrink-0 border-r border-border bg-sidebar text-sidebar-foreground lg:flex lg:flex-col">
+    <aside
+      className={cn(
+        "hidden shrink-0 border-r border-border bg-sidebar text-sidebar-foreground transition-[width] duration-200 lg:flex lg:flex-col",
+        collapsed ? "w-16" : "w-64"
+      )}
+    >
       <div className="flex h-16 items-center border-b border-border px-4">
-        <SidebarBrand />
+        <SidebarBrand collapsed={collapsed} />
       </div>
       <div className="flex flex-1 flex-col gap-6 overflow-y-auto p-4">
         <div>
-          <p className="px-3 pb-2 text-xs font-medium tracking-wider text-muted-foreground uppercase">
-            Platform
-          </p>
-          <SidebarNav group="primary" />
+          {!collapsed && (
+            <p className="px-3 pb-2 text-xs font-medium tracking-wider text-muted-foreground uppercase">
+              Platform
+            </p>
+          )}
+          <SidebarNav group="primary" collapsed={collapsed} />
         </div>
         <Separator />
-        <SidebarNav group="secondary" />
+        <SidebarNav group="secondary" collapsed={collapsed} />
+      </div>
+      <div className="border-t border-border p-2">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={toggle}
+          aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+          className="w-full"
+        >
+          {collapsed ? (
+            <PanelLeftOpenIcon className="size-4" />
+          ) : (
+            <PanelLeftCloseIcon className="size-4" />
+          )}
+        </Button>
       </div>
     </aside>
   )
