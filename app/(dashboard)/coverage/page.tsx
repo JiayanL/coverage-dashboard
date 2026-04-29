@@ -1,4 +1,3 @@
-import Link from "next/link"
 import { ShieldCheckIcon } from "lucide-react"
 
 import { Badge } from "@/components/ui/badge"
@@ -81,21 +80,36 @@ export default async function CoveragePage() {
                       className="hover:bg-muted/30"
                     >
                       <td className="px-4 py-3 text-foreground">
-                        <Link
-                          href={`/repositories/${row.fullName
-                            .split("/")
-                            .map(encodeURIComponent)
-                            .join("/")}`}
+                        <a
+                          href={`https://github.com/${row.fullName}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
                           className="font-medium hover:underline"
                         >
                           {row.repo}
-                        </Link>
+                        </a>
                       </td>
                       <td className="px-4 py-3">
                         <div className="flex flex-col gap-0.5">
-                          <span className="font-medium text-foreground">
-                            {row.name}
-                          </span>
+                          {row.kind === "monorepo" ? (
+                            <a
+                              href={`https://github.com/${row.fullName}/tree/main/services/${row.name}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="font-medium text-foreground hover:underline"
+                            >
+                              {row.name}
+                            </a>
+                          ) : (
+                            <a
+                              href={`https://github.com/${row.fullName}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="font-medium text-foreground hover:underline"
+                            >
+                              {row.name}
+                            </a>
+                          )}
                           {row.description && (
                             <span className="max-w-sm text-xs text-muted-foreground">
                               {row.description}
