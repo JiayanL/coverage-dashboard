@@ -47,7 +47,7 @@ export function MobileSidebar() {
           </div>
           <div>
             <p className="px-3 pb-2 text-xs font-medium tracking-wider text-muted-foreground uppercase">
-              Control plane
+              Devin
             </p>
             <SidebarNav group="control-plane" onNavigate={close} />
           </div>

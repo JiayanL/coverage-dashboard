@@ -62,7 +62,7 @@ export function DesktopSidebar() {
         <div>
           {!collapsed && (
             <p className="px-3 pb-2 text-xs font-medium tracking-wider text-muted-foreground uppercase">
-              Control plane
+              Devin
             </p>
           )}
           <SidebarNav group="control-plane" collapsed={collapsed} />

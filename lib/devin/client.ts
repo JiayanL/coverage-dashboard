@@ -29,11 +29,25 @@ export class DevinConfigError extends Error {
   }
 }
 
-function getApiKey(): string {
+type ApiScope = "v1" | "v3"
+
+/**
+ * Personal `apk_*` keys carry v1 scopes (playbooks, knowledge, sessions) but
+ * are NOT granted v3 ManageOrgSchedules. Service-user `cog_*` tokens are the
+ * inverse. To support both surfaces in one deployment, callers can set
+ * `DEVIN_SCHEDULES_API_KEY` to a cog token specifically for v3 schedule calls
+ * and keep `DEVIN_API_KEY` as the v1 token. If only one key is configured we
+ * fall back to it for both scopes (existing single-key setups keep working).
+ */
+function getApiKey(scope: ApiScope = "v1"): string {
+  if (scope === "v3") {
+    const schedulesKey = process.env.DEVIN_SCHEDULES_API_KEY
+    if (schedulesKey) return schedulesKey
+  }
   const key = process.env.DEVIN_API_KEY
   if (!key) {
     throw new DevinConfigError(
-      "DEVIN_API_KEY is not set. Add a personal API key (apk_*) or service user token (cog_*) to enable the control plane.",
+      "DEVIN_API_KEY is not set. Add a personal API key (apk_*) or service user token (cog_*) to enable the Devin section.",
     )
   }
   return key
@@ -65,9 +79,14 @@ export function deriveOrgIdFromKey(key: string): string | null {
 function getOrgId(): string {
   const explicit = process.env.DEVIN_ORG_ID
   if (explicit) return explicit
-  const apiKey = process.env.DEVIN_API_KEY
-  if (apiKey) {
-    const derived = deriveOrgIdFromKey(apiKey)
+  // `cog_*` service tokens often don't embed the org id, so try every
+  // configured key — whichever one carries the org-<uuid> prefix wins.
+  for (const key of [
+    process.env.DEVIN_API_KEY,
+    process.env.DEVIN_SCHEDULES_API_KEY,
+  ]) {
+    if (!key) continue
+    const derived = deriveOrgIdFromKey(key)
     if (derived) return derived
   }
   throw new DevinConfigError(
@@ -83,14 +102,18 @@ export function isDevinConfigured(): {
   base: boolean
   schedules: boolean
 } {
-  const key = process.env.DEVIN_API_KEY
-  const hasKey = Boolean(key)
+  const baseKey = process.env.DEVIN_API_KEY
+  const schedulesKey =
+    process.env.DEVIN_SCHEDULES_API_KEY ?? process.env.DEVIN_API_KEY
   const hasOrg = Boolean(
-    process.env.DEVIN_ORG_ID || (key && deriveOrgIdFromKey(key)),
+    process.env.DEVIN_ORG_ID ||
+      (baseKey && deriveOrgIdFromKey(baseKey)) ||
+      (process.env.DEVIN_SCHEDULES_API_KEY &&
+        deriveOrgIdFromKey(process.env.DEVIN_SCHEDULES_API_KEY)),
   )
   return {
-    base: hasKey,
-    schedules: hasKey && hasOrg,
+    base: Boolean(baseKey),
+    schedules: Boolean(schedulesKey) && hasOrg,
   }
 }
 
@@ -107,7 +130,8 @@ async function devinFetch<T>(
   path: string,
   options: FetchOptions = {},
 ): Promise<T> {
-  const apiKey = getApiKey()
+  const scope: ApiScope = path.startsWith("/v3/") ? "v3" : "v1"
+  const apiKey = getApiKey(scope)
   const url = `${getBaseUrl()}${path}`
   const init: RequestInit & { next?: { revalidate: number } } = {
     method: options.method ?? "GET",

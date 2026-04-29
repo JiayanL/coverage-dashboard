@@ -12,7 +12,7 @@ export function ConfigRequired({ missing, resource }: ConfigRequiredProps) {
     <EmptyState
       icon={KeyRoundIcon}
       title={`Set ${missing.join(" and ")} to manage ${resource}`}
-      description={`The control plane talks directly to api.devin.ai. Set ${missing.join(", ")} in your environment (e.g. .env.local) and reload the page.`}
+      description={`The Devin section talks directly to api.devin.ai. Set ${missing.join(", ")} in your environment (e.g. .env.local) and reload the page.`}
     />
   )
 }
