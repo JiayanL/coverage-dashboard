@@ -29,6 +29,8 @@ export const metadata = {
 
 export const dynamic = "force-dynamic"
 
+const PINNED_REPO = "JiayanL/consumer-banking-platform"
+
 export default async function KnowledgePage() {
   const config = isDevinConfigured()
   if (!config.base) {
@@ -73,7 +75,8 @@ export default async function KnowledgePage() {
     throw err
   }
 
-  const notes = data.knowledge ?? []
+  const allNotes = data.knowledge ?? []
+  const notes = allNotes.filter((note) => note.pinned_repo === PINNED_REPO)
   const folders = data.folders ?? []
   const folderById = new Map(folders.map((f) => [f.id, f]))
 
@@ -81,7 +84,7 @@ export default async function KnowledgePage() {
     <div className="flex flex-col gap-8">
       <PageHeader
         title="Knowledge"
-        description="Trigger-based notes that Devin retrieves automatically when relevant."
+        description={`Trigger-based notes pinned to ${PINNED_REPO}.`}
         actions={
           <Button render={<Link href="/knowledge/new" />}>
             <PlusIcon className="size-4" aria-hidden="true" />
@@ -93,8 +96,12 @@ export default async function KnowledgePage() {
       {notes.length === 0 ? (
         <EmptyState
           icon={BookOpenTextIcon}
-          title="No knowledge notes yet"
-          description="Capture project-specific context once and let Devin pull it in automatically based on the trigger description."
+          title={`No notes pinned to ${PINNED_REPO}`}
+          description={
+            allNotes.length > 0
+              ? `Found ${allNotes.length} note(s) in the workspace, but none are pinned to ${PINNED_REPO}. Pin a note to this repo to have it appear here.`
+              : "Capture project-specific context once and let Devin pull it in automatically based on the trigger description."
+          }
           action={
             <Button render={<Link href="/knowledge/new" />}>
               <PlusIcon className="size-4" aria-hidden="true" />
