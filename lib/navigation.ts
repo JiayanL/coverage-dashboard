@@ -1,6 +1,7 @@
 import {
   LayoutDashboardIcon,
   ShieldCheckIcon,
+  ScaleIcon,
   FolderGit2Icon,
   FileBarChart2Icon,
   BookOpenTextIcon,
@@ -34,6 +35,12 @@ export const primaryNav: NavItem[] = [
     href: "/coverage",
     icon: ShieldCheckIcon,
     description: "Detailed coverage breakdown",
+  },
+  {
+    title: "Compliance",
+    href: "/compliance",
+    icon: ScaleIcon,
+    description: "OCC compliance category coverage",
   },
   {
     title: "Repositories",
