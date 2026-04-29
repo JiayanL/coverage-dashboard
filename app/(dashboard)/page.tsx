@@ -1,5 +1,6 @@
 import {
   CircleCheckIcon,
+  FileCheck2Icon,
   GitBranchIcon,
   ShieldAlertIcon,
   ShieldCheckIcon,
@@ -25,8 +26,10 @@ import {
   getOverviewMetrics,
   getRecentActivity,
 } from "@/lib/coverage/queries"
+import { demoActOneEvidence } from "@/lib/demo/data"
 import { getDemoFleetMetrics } from "@/lib/demo/metrics"
 import { formatPct, formatRelativeTime, shortSha } from "@/lib/format"
+
 
 export const metadata = {
   title: "Overview",
@@ -108,13 +111,59 @@ export default async function OverviewPage() {
         />
       </section>
 
+      <section
+        aria-label="Act 1 evidence"
+        className="rounded-xl border border-border bg-muted/20 p-5"
+      >
+        <div className="flex items-start gap-3">
+          <div className="rounded-lg bg-background p-2 text-foreground">
+            <FileCheck2Icon className="size-5" aria-hidden="true" />
+          </div>
+          <div className="flex flex-col gap-1">
+            <div className="flex items-center gap-2">
+              <Badge variant="secondary">Act 1 · single-file evidence</Badge>
+              <Badge variant="outline">PII_HANDLING</Badge>
+            </div>
+            <h2 className="text-sm font-semibold text-foreground">
+              {demoActOneEvidence.path}
+            </h2>
+            <p className="text-xs text-muted-foreground">
+              {demoActOneEvidence.service} · {demoActOneEvidence.owner} (
+              {demoActOneEvidence.ownerHandle}) · {demoActOneEvidence.testCount}{" "}
+              tests added · PR {demoActOneEvidence.prNumber} merged{" "}
+              {demoActOneEvidence.mergedRelative}
+            </p>
+          </div>
+          <div className="ml-auto grid grid-cols-2 gap-3 text-right text-xs tabular-nums">
+            <div>
+              <div className="text-muted-foreground">Coverage</div>
+              <div className="font-medium text-foreground">
+                {formatPct(demoActOneEvidence.beforeCoverage, 0)} →{" "}
+                {formatPct(demoActOneEvidence.afterCoverage, 0)}
+              </div>
+            </div>
+            <div>
+              <div className="text-muted-foreground">Mutation</div>
+              <div className="font-medium text-foreground">
+                {formatPct(demoActOneEvidence.beforeMutation, 0)} →{" "}
+                {formatPct(demoActOneEvidence.afterMutation, 0)}
+              </div>
+            </div>
+          </div>
+        </div>
+        <p className="mt-3 text-xs text-muted-foreground">
+          One engineer with Devin on one file — {demoActOneEvidence.durationMinutes}m,
+          one PR. Same dashboard, zoomed in. Beats 1–4 widen this to fleet scale.
+        </p>
+      </section>
+
       <section className="grid gap-6 lg:grid-cols-3">
         <Card className="lg:col-span-2">
           <CardHeader>
-            <CardTitle>Coverage trend</CardTitle>
+            <CardTitle>Coverage + mutation trend</CardTitle>
             <CardDescription>
-              Aggregate coverage across all tracked repositories over the last
-              30 days.
+              Two numbers moving together — coverage as the area, mutation as
+              the dashed line. 30-day window across all tracked repositories.
             </CardDescription>
           </CardHeader>
           <CardContent className="text-primary">
