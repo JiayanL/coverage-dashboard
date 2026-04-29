@@ -52,7 +52,7 @@ function toErrorMessage(err: unknown): string {
   if (err instanceof DevinConfigError) return err.message
   if (err instanceof DevinApiError) {
     if (err.status === 401 || err.status === 403) {
-      return "Devin API rejected the request (auth). The v3 schedules endpoint requires a service-user (cog_*) token with ManageOrgSchedules — personal apk_user_* keys don't have v3 schedule scopes. Set DEVIN_SCHEDULES_API_KEY to a cog_* token (DEVIN_API_KEY can stay as your apk_* key for v1 playbooks/knowledge)."
+      return "Devin API rejected the request (auth). The v3 /schedules endpoint requires a service-user (cog_*) token with ManageOrgSchedules — personal apk_user_* keys don't carry v3 scopes. Set DEVIN_API_KEY_V3 to a cog_* token (DEVIN_API_KEY_V1 / DEVIN_API_KEY can stay as your apk_* key for v1 playbooks/knowledge)."
     }
     if (err.status === 422) {
       return `Validation error: ${err.body}`

@@ -34,7 +34,7 @@ function toErrorMessage(err: unknown): string {
   if (err instanceof DevinConfigError) return err.message
   if (err instanceof DevinApiError) {
     if (err.status === 401 || err.status === 403) {
-      return "Devin API rejected the request (auth). Check that DEVIN_API_KEY has playbook permissions."
+      return "Devin API rejected the request (auth). The /v1/playbooks endpoint needs a personal apk_* token with playbook scopes \u2014 cog_* service-user tokens don't carry v1 scopes. Set DEVIN_API_KEY_V1 to an apk_* token (DEVIN_API_KEY_V3 / DEVIN_API_KEY can stay as your cog_* token for v3 schedules)."
     }
     if (err.status === 422) {
       return `Validation error: ${err.body}`
