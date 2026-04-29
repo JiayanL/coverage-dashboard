@@ -52,7 +52,7 @@ function toErrorMessage(err: unknown): string {
   if (err instanceof DevinConfigError) return err.message
   if (err instanceof DevinApiError) {
     if (err.status === 401 || err.status === 403) {
-      return "Devin API rejected the request (auth). Check that DEVIN_API_KEY has ManageOrgSchedules permission and DEVIN_ORG_ID is correct."
+      return "Devin API rejected the request (auth). DEVIN_API_KEY needs ManageOrgSchedules permission — usually a service-user (cog_*) token, since personal apk_user_* keys don't have v3 schedule scopes."
     }
     if (err.status === 422) {
       return `Validation error: ${err.body}`

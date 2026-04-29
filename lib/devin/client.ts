@@ -33,20 +33,46 @@ function getApiKey(): string {
   const key = process.env.DEVIN_API_KEY
   if (!key) {
     throw new DevinConfigError(
-      "DEVIN_API_KEY is not set. Add a personal API key (apk_user_*) or service user token to enable the control plane.",
+      "DEVIN_API_KEY is not set. Add a personal API key (apk_*) or service user token (cog_*) to enable the control plane.",
     )
   }
   return key
 }
 
-function getOrgId(): string {
-  const orgId = process.env.DEVIN_ORG_ID
-  if (!orgId) {
-    throw new DevinConfigError(
-      "DEVIN_ORG_ID is not set. Schedules require an organization id (find it in your Devin settings URL).",
-    )
+/**
+ * Devin API keys (`apk_*` and `cog_*`) embed the organization id as base64("org-<uuid>:<secret>").
+ * Decode that prefix so callers don't need a separate DEVIN_ORG_ID variable.
+ */
+export function deriveOrgIdFromKey(key: string): string | null {
+  const match = key.match(/^(?:apk|cog)(?:_user)?_(.+)$/)
+  const payload = match ? match[1] : key
+  const candidates = [payload]
+  // Some keys may use base64url; normalize before attempting decode.
+  const normalized = payload.replace(/-/g, "+").replace(/_/g, "/")
+  if (normalized !== payload) candidates.push(normalized)
+  for (const candidate of candidates) {
+    try {
+      const decoded = Buffer.from(candidate, "base64").toString("utf-8")
+      const orgMatch = decoded.match(/org-[a-f0-9]{32}/i)
+      if (orgMatch) return orgMatch[0]
+    } catch {
+      // ignore and try next candidate
+    }
   }
-  return orgId
+  return null
+}
+
+function getOrgId(): string {
+  const explicit = process.env.DEVIN_ORG_ID
+  if (explicit) return explicit
+  const apiKey = process.env.DEVIN_API_KEY
+  if (apiKey) {
+    const derived = deriveOrgIdFromKey(apiKey)
+    if (derived) return derived
+  }
+  throw new DevinConfigError(
+    "Could not determine Devin organization id. Set DEVIN_ORG_ID, or use an apk_*/cog_* API key that embeds the org id.",
+  )
 }
 
 function getBaseUrl(): string {
@@ -57,9 +83,14 @@ export function isDevinConfigured(): {
   base: boolean
   schedules: boolean
 } {
+  const key = process.env.DEVIN_API_KEY
+  const hasKey = Boolean(key)
+  const hasOrg = Boolean(
+    process.env.DEVIN_ORG_ID || (key && deriveOrgIdFromKey(key)),
+  )
   return {
-    base: Boolean(process.env.DEVIN_API_KEY),
-    schedules: Boolean(process.env.DEVIN_API_KEY && process.env.DEVIN_ORG_ID),
+    base: hasKey,
+    schedules: hasKey && hasOrg,
   }
 }
 

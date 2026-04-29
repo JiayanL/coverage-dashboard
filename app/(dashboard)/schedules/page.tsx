@@ -32,8 +32,7 @@ export const dynamic = "force-dynamic"
 export default async function SchedulesPage() {
   const config = isDevinConfigured()
   if (!config.schedules) {
-    const missing = !config.base ? ["DEVIN_API_KEY"] : []
-    if (config.base) missing.push("DEVIN_ORG_ID")
+    const missing = !config.base ? ["DEVIN_API_KEY"] : ["DEVIN_ORG_ID"]
     return (
       <div className="flex flex-col gap-8">
         <PageHeader
