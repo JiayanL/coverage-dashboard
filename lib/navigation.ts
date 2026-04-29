@@ -4,6 +4,9 @@ import {
   NetworkIcon,
   FolderGit2Icon,
   FileBarChart2Icon,
+  BookOpenTextIcon,
+  ClockIcon,
+  PlayIcon,
   SettingsIcon,
   type LucideIcon,
 } from "lucide-react"
@@ -13,6 +16,11 @@ export type NavItem = {
   href: string
   icon: LucideIcon
   description?: string
+}
+
+export type NavGroup = {
+  label: string
+  items: NavItem[]
 }
 
 export const primaryNav: NavItem[] = [
@@ -45,6 +53,27 @@ export const primaryNav: NavItem[] = [
     href: "/reports",
     icon: FileBarChart2Icon,
     description: "Scheduled and ad-hoc reports",
+  },
+]
+
+export const controlPlaneNav: NavItem[] = [
+  {
+    title: "Playbooks",
+    href: "/playbooks",
+    icon: PlayIcon,
+    description: "Reusable Devin prompts",
+  },
+  {
+    title: "Schedules",
+    href: "/schedules",
+    icon: ClockIcon,
+    description: "Recurring and one-time sessions",
+  },
+  {
+    title: "Knowledge",
+    href: "/knowledge",
+    icon: BookOpenTextIcon,
+    description: "Trigger-based notes",
   },
 ]
 

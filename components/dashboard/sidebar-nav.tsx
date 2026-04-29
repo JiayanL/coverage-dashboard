@@ -4,7 +4,11 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 
 import { cn } from "@/lib/utils"
-import { primaryNav, secondaryNav } from "@/lib/navigation"
+import {
+  controlPlaneNav,
+  primaryNav,
+  secondaryNav,
+} from "@/lib/navigation"
 import {
   Tooltip,
   TooltipContent,
@@ -13,14 +17,20 @@ import {
 } from "@/components/ui/tooltip"
 
 interface SidebarNavProps {
-  group: "primary" | "secondary"
+  group: "primary" | "control-plane" | "secondary"
   onNavigate?: () => void
   collapsed?: boolean
 }
 
+const NAV_BY_GROUP = {
+  primary: primaryNav,
+  "control-plane": controlPlaneNav,
+  secondary: secondaryNav,
+} as const
+
 export function SidebarNav({ group, onNavigate, collapsed }: SidebarNavProps) {
   const pathname = usePathname()
-  const items = group === "primary" ? primaryNav : secondaryNav
+  const items = NAV_BY_GROUP[group]
 
   return (
     <TooltipProvider>

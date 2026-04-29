@@ -59,6 +59,14 @@ export function DesktopSidebar() {
           )}
           <SidebarNav group="primary" collapsed={collapsed} />
         </div>
+        <div>
+          {!collapsed && (
+            <p className="px-3 pb-2 text-xs font-medium tracking-wider text-muted-foreground uppercase">
+              Control plane
+            </p>
+          )}
+          <SidebarNav group="control-plane" collapsed={collapsed} />
+        </div>
         <Separator />
         <SidebarNav group="secondary" collapsed={collapsed} />
       </div>
