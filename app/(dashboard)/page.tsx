@@ -1,8 +1,8 @@
 import {
   CircleCheckIcon,
+  ExternalLinkIcon,
   GitBranchIcon,
   ShieldAlertIcon,
-  ShieldCheckIcon,
   TrendingUpIcon,
 } from "lucide-react"
 
@@ -25,7 +25,6 @@ import {
   getOverviewMetrics,
   getRecentActivity,
 } from "@/lib/coverage/queries"
-import { getDemoFleetMetrics } from "@/lib/demo/metrics"
 import { formatPct, formatRelativeTime, shortSha } from "@/lib/format"
 
 export const metadata = {
@@ -41,8 +40,6 @@ export default async function OverviewPage() {
     getCoverageTrend(30),
     getRecentActivity(6),
   ])
-  const fleet = getDemoFleetMetrics()
-
   return (
     <div className="flex flex-col gap-8">
       <AutoRefresh />
@@ -81,33 +78,6 @@ export default async function OverviewPage() {
         />
       </section>
 
-      <section
-        aria-label="Demo fleet pulse"
-        className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4"
-      >
-        <StatCard
-          title="Mutation score"
-          value={formatPct(metrics.mutationScore, 1)}
-          icon={ShieldCheckIcon}
-          description="weighted mutant kill rate"
-        />
-        <StatCard
-          title="Recommended files"
-          value={fleet.recommendations.toLocaleString()}
-          description={`${fleet.approved} approved · ${fleet.rejected} rejected`}
-        />
-        <StatCard
-          title="Fleet PRs"
-          value={fleet.openedPrs.toLocaleString()}
-          description="opened by approved parallel sessions"
-        />
-        <StatCard
-          title="Projected lift"
-          value={`+${(fleet.coverageDelta * 100).toFixed(1)}pp`}
-          description={`pending PRs · mutation +${(fleet.mutationDelta * 100).toFixed(1)}pp`}
-        />
-      </section>
-
       <section className="grid gap-6 lg:grid-cols-3">
         <Card className="lg:col-span-2">
           <CardHeader>
@@ -134,37 +104,48 @@ export default async function OverviewPage() {
                 description="Coverage runs will appear here as soon as the first ingest lands."
               />
             ) : (
-              activity.map((item, index) => (
-                <div key={item.id} className="flex flex-col">
-                  <div className="flex items-start justify-between gap-3 py-2">
-                    <div className="flex flex-col gap-0.5 min-w-0">
-                      <span className="text-sm font-medium text-foreground truncate">
-                        {item.repo}
-                      </span>
-                      <span className="text-xs text-muted-foreground truncate">
-                        {item.ref} · {shortSha(item.sha)} ·{" "}
-                        {formatRelativeTime(item.runAt)}
-                        {item.mutationScore !== null
-                          ? ` · mutation ${formatPct(item.mutationScore, 0)}`
-                          : ""}
-                      </span>
-                    </div>
-                    <Badge
-                      variant={
-                        item.status === "passed"
-                          ? "secondary"
-                          : item.status === "warning"
-                            ? "outline"
-                            : "destructive"
-                      }
-                      className="shrink-0 tabular-nums"
+              activity.map((item, index) => {
+                const runUrl = item.runId
+                  ? `https://github.com/${item.repoFullName}/actions/runs/${item.runId}`
+                  : `https://github.com/${item.repoFullName}/commit/${item.sha}`
+                return (
+                  <div key={item.id} className="flex flex-col">
+                    <a
+                      href={runUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-start justify-between gap-3 py-2 rounded-md -mx-2 px-2 transition-colors hover:bg-muted/50"
                     >
-                      {formatPct(item.pct)}
-                    </Badge>
+                      <div className="flex flex-col gap-0.5 min-w-0">
+                        <span className="text-sm font-medium text-foreground truncate flex items-center gap-1.5">
+                          {item.repo}
+                          <ExternalLinkIcon className="h-3 w-3 shrink-0 text-muted-foreground" />
+                        </span>
+                        <span className="text-xs text-muted-foreground truncate">
+                          {item.ref} · {shortSha(item.sha)} ·{" "}
+                          {formatRelativeTime(item.runAt)}
+                          {item.mutationScore !== null
+                            ? ` · mutation ${formatPct(item.mutationScore, 0)}`
+                            : ""}
+                        </span>
+                      </div>
+                      <Badge
+                        variant={
+                          item.status === "passed"
+                            ? "secondary"
+                            : item.status === "warning"
+                              ? "outline"
+                              : "destructive"
+                        }
+                        className="shrink-0 tabular-nums"
+                      >
+                        {formatPct(item.pct)}
+                      </Badge>
+                    </a>
+                    {index < activity.length - 1 ? <Separator /> : null}
                   </div>
-                  {index < activity.length - 1 ? <Separator /> : null}
-                </div>
-              ))
+                )
+              })
             )}
           </CardContent>
         </Card>
