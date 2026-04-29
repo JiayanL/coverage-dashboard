@@ -18,7 +18,7 @@ export default function NewKnowledgePage() {
     return (
       <div className="flex flex-col gap-8">
         <PageHeader title="New knowledge note" />
-        <ConfigRequired missing={["DEVIN_API_KEY"]} resource="knowledge" />
+        <ConfigRequired missing={["DEVIN_API_KEY_V1"]} resource="knowledge" />
       </div>
     )
   }

@@ -39,7 +39,9 @@ export default async function ScheduleDetailPage({ params }: PageProps) {
   const scheduleId = decodeURIComponent(id)
   const config = isDevinConfigured()
   if (!config.schedules) {
-    const missing = !config.base ? ["DEVIN_API_KEY"] : ["DEVIN_ORG_ID"]
+    const missing: string[] = []
+    if (!config.v3Key) missing.push("DEVIN_API_KEY_V3")
+    if (!config.org) missing.push("DEVIN_ORG_ID")
     return (
       <div className="flex flex-col gap-8">
         <PageHeader title="Schedule" />

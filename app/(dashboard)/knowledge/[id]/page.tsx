@@ -41,7 +41,7 @@ export default async function KnowledgeDetailPage({ params }: PageProps) {
     return (
       <div className="flex flex-col gap-8">
         <PageHeader title="Knowledge" />
-        <ConfigRequired missing={["DEVIN_API_KEY"]} resource="knowledge" />
+        <ConfigRequired missing={["DEVIN_API_KEY_V1"]} resource="knowledge" />
       </div>
     )
   }
