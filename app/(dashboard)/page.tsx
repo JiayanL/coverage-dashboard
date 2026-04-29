@@ -104,14 +104,10 @@ export default async function OverviewPage() {
                 description="Coverage runs will appear here as soon as the first ingest lands."
               />
             ) : (
-              activity.map((item, index) => {
-                const runUrl = item.runId
-                  ? `https://github.com/${item.repoFullName}/actions/runs/${item.runId}`
-                  : `https://github.com/${item.repoFullName}/commit/${item.sha}`
-                return (
+              activity.map((item, index) => (
                   <div key={item.id} className="flex flex-col">
                     <a
-                      href={runUrl}
+                      href="https://github.com/JiayanL/consumer-banking-platform/actions"
                       target="_blank"
                       rel="noopener noreferrer"
                       className="flex items-start justify-between gap-3 py-2 rounded-md -mx-2 px-2 transition-colors hover:bg-muted/50"
@@ -144,8 +140,7 @@ export default async function OverviewPage() {
                     </a>
                     {index < activity.length - 1 ? <Separator /> : null}
                   </div>
-                )
-              })
+                ))
             )}
           </CardContent>
         </Card>
