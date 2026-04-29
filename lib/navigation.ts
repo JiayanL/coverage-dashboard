@@ -3,7 +3,7 @@ import {
   ShieldCheckIcon,
   ScaleIcon,
   FolderGit2Icon,
-  FileBarChart2Icon,
+  GavelIcon,
   BookOpenTextIcon,
   ClockIcon,
   PlayIcon,
@@ -49,10 +49,10 @@ export const primaryNav: NavItem[] = [
     description: "Tracked repositories",
   },
   {
-    title: "Reports",
-    href: "/reports",
-    icon: FileBarChart2Icon,
-    description: "Scheduled and ad-hoc reports",
+    title: "Governance",
+    href: "/governance",
+    icon: GavelIcon,
+    description: "Autonomy rings and quality gates",
   },
 ]
 
