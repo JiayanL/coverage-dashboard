@@ -365,6 +365,7 @@ export async function getCoverageRows(): Promise<
   Array<{
     repo: string
     fullName: string
+    kind: "single" | "monorepo"
     name: string
     lang: string
     description: string | null
@@ -387,6 +388,7 @@ export async function getCoverageRows(): Promise<
   const out: Array<{
     repo: string
     fullName: string
+    kind: "single" | "monorepo"
     name: string
     lang: string
     description: string | null
@@ -422,6 +424,7 @@ export async function getCoverageRows(): Promise<
       out.push({
         repo: r.displayName,
         fullName: r.fullName,
+        kind: "single",
         name: r.displayName,
         lang: "—",
         description: null,
@@ -445,6 +448,7 @@ export async function getCoverageRows(): Promise<
       out.push({
         repo: r.displayName,
         fullName: r.fullName,
+        kind: r.kind,
         name: s.name,
         lang: s.lang,
         description: s.description,

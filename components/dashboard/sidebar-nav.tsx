@@ -9,10 +9,17 @@ import {
   primaryNav,
   secondaryNav,
 } from "@/lib/navigation"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
 
 interface SidebarNavProps {
   group: "primary" | "control-plane" | "secondary"
   onNavigate?: () => void
+  collapsed?: boolean
 }
 
 const NAV_BY_GROUP = {
@@ -21,36 +28,50 @@ const NAV_BY_GROUP = {
   secondary: secondaryNav,
 } as const
 
-export function SidebarNav({ group, onNavigate }: SidebarNavProps) {
+export function SidebarNav({ group, onNavigate, collapsed }: SidebarNavProps) {
   const pathname = usePathname()
   const items = NAV_BY_GROUP[group]
 
   return (
-    <nav className="flex flex-col gap-1">
-      {items.map((item) => {
-        const isActive =
-          item.href === "/"
-            ? pathname === "/"
-            : pathname === item.href || pathname.startsWith(`${item.href}/`)
-        const Icon = item.icon
+    <TooltipProvider>
+      <nav className="flex flex-col gap-1">
+        {items.map((item) => {
+          const isActive =
+            item.href === "/"
+              ? pathname === "/"
+              : pathname === item.href || pathname.startsWith(`${item.href}/`)
+          const Icon = item.icon
 
-        return (
-          <Link
-            key={item.href}
-            href={item.href}
-            onClick={onNavigate}
-            className={cn(
-              "group flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
-              "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
-              isActive &&
-                "bg-sidebar-accent text-sidebar-accent-foreground shadow-xs"
-            )}
-          >
-            <Icon className="size-4 shrink-0" aria-hidden="true" />
-            <span>{item.title}</span>
-          </Link>
-        )
-      })}
-    </nav>
+          const link = (
+            <Link
+              key={item.href}
+              href={item.href}
+              onClick={onNavigate}
+              className={cn(
+                "group flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+                "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+                isActive &&
+                  "bg-sidebar-accent text-sidebar-accent-foreground shadow-xs",
+                collapsed && "justify-center px-2"
+              )}
+            >
+              <Icon className="size-4 shrink-0" aria-hidden="true" />
+              {!collapsed && <span>{item.title}</span>}
+            </Link>
+          )
+
+          if (collapsed) {
+            return (
+              <Tooltip key={item.href}>
+                <TooltipTrigger render={link} />
+                <TooltipContent side="right">{item.title}</TooltipContent>
+              </Tooltip>
+            )
+          }
+
+          return link
+        })}
+      </nav>
+    </TooltipProvider>
   )
 }
