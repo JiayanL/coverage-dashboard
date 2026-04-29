@@ -5,15 +5,10 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-import { ApiErrorState } from "@/components/control-plane/api-error"
 import { ConfigRequired } from "@/components/control-plane/config-required"
 import { PageHeader } from "@/components/dashboard/page-header"
 import { ScheduleForm } from "@/app/(dashboard)/schedules/schedule-form"
-import {
-  DevinApiError,
-  isDevinConfigured,
-  listPlaybooks,
-} from "@/lib/devin/client"
+import { isDevinConfigured, listPlaybooks } from "@/lib/devin/client"
 
 export const metadata = { title: "New schedule" }
 
@@ -33,24 +28,11 @@ export default async function NewSchedulePage() {
     )
   }
 
-  let playbooks: Awaited<ReturnType<typeof listPlaybooks>> = []
-  try {
-    playbooks = await listPlaybooks()
-  } catch (err) {
-    // Schedules can still be created without a playbook; surface a soft warning.
-    if (err instanceof DevinApiError) {
-      return (
-        <div className="flex flex-col gap-8">
-          <PageHeader title="New schedule" />
-          <ApiErrorState
-            title={`Devin API error ${err.status}`}
-            message={`Could not load playbooks: ${err.body.slice(0, 240)}`}
-          />
-        </div>
-      )
-    }
-    throw err
-  }
+  // Schedules can still be created without a playbook; degrade gracefully if
+  // the v1 key isn't configured (DevinConfigError) or the API rejects the
+  // call (DevinApiError) so users with only a v3 key can still reach the form.
+  const playbooks: Awaited<ReturnType<typeof listPlaybooks>> =
+    await listPlaybooks().catch(() => [])
 
   return (
     <div className="flex flex-col gap-8">
