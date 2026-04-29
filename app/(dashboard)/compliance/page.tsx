@@ -41,6 +41,8 @@ type CategoryRollup = {
 function buildCategoryRollups(rows: ServiceRow[]): {
   rollups: CategoryRollup[]
   unmapped: ServiceRow[]
+  overallCovered: number
+  overallTotal: number
 } {
   const mapped = new Set<string>()
   const buckets: Record<ComplianceCategory, { covered: number; total: number; services: ServiceRow[] }> = {
@@ -50,10 +52,17 @@ function buildCategoryRollups(rows: ServiceRow[]): {
     AUDIT_TRAIL: { covered: 0, total: 0, services: [] },
   }
 
+  let overallCovered = 0
+  let overallTotal = 0
+
   for (const row of rows) {
     const categories = SERVICE_CATEGORY_MAP[row.name]
     if (!categories) continue
-    mapped.add(row.name)
+    if (!mapped.has(row.name)) {
+      mapped.add(row.name)
+      overallCovered += row.covered
+      overallTotal += row.total
+    }
     for (const cat of categories) {
       buckets[cat].covered += row.covered
       buckets[cat].total += row.total
@@ -78,16 +87,13 @@ function buildCategoryRollups(rows: ServiceRow[]): {
 
   const unmapped = rows.filter((r) => !mapped.has(r.name))
 
-  return { rollups, unmapped }
+  return { rollups, unmapped, overallCovered, overallTotal }
 }
 
 export default async function CompliancePage() {
   const rows = await getCoverageRows()
-  const { rollups, unmapped } = buildCategoryRollups(rows)
-
-  const allCovered = rollups.reduce((s, r) => s + r.covered, 0)
-  const allTotal = rollups.reduce((s, r) => s + r.total, 0)
-  const overallPct = allTotal > 0 ? allCovered / allTotal : 0
+  const { rollups, unmapped, overallCovered, overallTotal } = buildCategoryRollups(rows)
+  const overallPct = overallTotal > 0 ? overallCovered / overallTotal : 0
 
   const meetingGate = rollups.filter((r) => r.pct >= OCC_GATE_PCT).length
 
@@ -193,8 +199,8 @@ export default async function CompliancePage() {
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-border">
-                          {r.services.map((s) => (
-                            <tr key={s.name} className="hover:bg-muted/30">
+                          {r.services.map((s, idx) => (
+                            <tr key={`${s.fullName}:${s.name}:${idx}`} className="hover:bg-muted/30">
                               <td className="px-4 py-3 font-medium text-foreground">
                                 {s.name}
                               </td>
@@ -264,8 +270,8 @@ export default async function CompliancePage() {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-border">
-                      {unmapped.map((s) => (
-                        <tr key={s.name} className="hover:bg-muted/30">
+                      {unmapped.map((s, idx) => (
+                        <tr key={`${s.fullName}:${s.name}:${idx}`} className="hover:bg-muted/30">
                           <td className="px-4 py-3 font-medium text-foreground">
                             {s.name}
                           </td>
