@@ -38,7 +38,7 @@ export default async function PlaybooksPage() {
           title="Playbooks"
           description="Reusable Devin prompts the team can attach to sessions."
         />
-        <ConfigRequired missing={["DEVIN_API_KEY"]} resource="playbooks" />
+        <ConfigRequired missing={["DEVIN_API_KEY_V1"]} resource="playbooks" />
       </div>
     )
   }

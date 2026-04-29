@@ -42,7 +42,7 @@ export default async function PlaybookDetailPage({ params }: PageProps) {
     return (
       <div className="flex flex-col gap-8">
         <PageHeader title="Playbook" />
-        <ConfigRequired missing={["DEVIN_API_KEY"]} resource="playbooks" />
+        <ConfigRequired missing={["DEVIN_API_KEY_V1"]} resource="playbooks" />
       </div>
     )
   }

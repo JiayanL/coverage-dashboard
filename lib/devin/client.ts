@@ -116,14 +116,20 @@ function getBaseUrl(): string {
 }
 
 export function isDevinConfigured(): {
+  /** True when a v1 key is resolvable (playbooks/knowledge can run). */
   base: boolean
+  /** True when both a v3 key AND an org id are resolvable (schedules can run). */
   schedules: boolean
+  /** Granular flags so callers can show which env var is actually missing. */
+  v1Key: boolean
+  v3Key: boolean
+  org: boolean
 } {
   // Mirror getApiKey() exactly (truthiness, with DEVIN_API_KEY fallback) so
   // page gates don't disagree with the runtime fetch path.
-  const v1Key = resolveKeyForScope("v1")
-  const v3Key = resolveKeyForScope("v3")
-  const hasOrg = Boolean(
+  const v1Key = Boolean(resolveKeyForScope("v1"))
+  const v3Key = Boolean(resolveKeyForScope("v3"))
+  const org = Boolean(
     process.env.DEVIN_ORG_ID ||
       [
         process.env.DEVIN_API_KEY,
@@ -132,8 +138,11 @@ export function isDevinConfigured(): {
       ].some((k) => k && deriveOrgIdFromKey(k)),
   )
   return {
-    base: Boolean(v1Key),
-    schedules: Boolean(v3Key) && hasOrg,
+    base: v1Key,
+    schedules: v3Key && org,
+    v1Key,
+    v3Key,
+    org,
   }
 }
 

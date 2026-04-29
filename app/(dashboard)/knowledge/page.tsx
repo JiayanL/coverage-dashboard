@@ -38,7 +38,7 @@ export default async function KnowledgePage() {
           title="Knowledge"
           description="Trigger-based notes that Devin retrieves automatically."
         />
-        <ConfigRequired missing={["DEVIN_API_KEY"]} resource="knowledge" />
+        <ConfigRequired missing={["DEVIN_API_KEY_V1"]} resource="knowledge" />
       </div>
     )
   }
