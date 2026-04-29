@@ -64,10 +64,21 @@ export function PlaybookExecuteForm({
         sessionId: result.data!.session_id,
         url: result.data!.url,
       })
-      window.open(result.data!.url, "_blank", "noopener,noreferrer")
-      toast.success("Session started", {
-        description: `Devin session ${result.data!.session_id} opened in a new tab.`,
-      })
+      const opened = window.open(
+        result.data!.url,
+        "_blank",
+        "noopener,noreferrer",
+      )
+      if (opened) {
+        toast.success("Session started", {
+          description: `Devin session ${result.data!.session_id} opened in a new tab.`,
+        })
+      } else {
+        toast.info("Session started", {
+          description:
+            "Popup blocked — use the \"Open session\" button below to open it.",
+        })
+      }
       form.reset({ prompt: "", title: values.title })
     })
   }
