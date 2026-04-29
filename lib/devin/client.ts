@@ -232,11 +232,11 @@ export async function deleteKnowledge(knowledgeId: string): Promise<void> {
 
 export async function listSchedules(): Promise<Schedule[]> {
   const orgId = getOrgId()
-  const data = await devinFetch<{ schedules?: Schedule[] } | Schedule[]>(
-    `/v3/organizations/${encodeURIComponent(orgId)}/schedules`,
-  )
+  const data = await devinFetch<
+    { items?: Schedule[]; schedules?: Schedule[] } | Schedule[]
+  >(`/v3/organizations/${encodeURIComponent(orgId)}/schedules`)
   if (Array.isArray(data)) return data
-  return data.schedules ?? []
+  return data.items ?? data.schedules ?? []
 }
 
 export async function getSchedule(scheduleId: string): Promise<Schedule> {
