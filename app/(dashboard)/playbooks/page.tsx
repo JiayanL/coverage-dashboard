@@ -21,6 +21,7 @@ import {
   listPlaybooks,
 } from "@/lib/devin/client"
 import { formatRelativeFromString } from "@/lib/devin/format"
+import { PlaybookQuickExecuteDialog } from "@/app/(dashboard)/playbooks/quick-execute-dialog"
 
 export const metadata = {
   title: "Playbooks",
@@ -115,6 +116,9 @@ export default async function PlaybooksPage() {
                     <th className="px-4 py-2.5 text-left font-medium">Macro</th>
                     <th className="px-4 py-2.5 text-left font-medium">Updated by</th>
                     <th className="px-4 py-2.5 text-right font-medium">Updated</th>
+                    <th className="px-4 py-2.5 text-right font-medium">
+                      <span className="sr-only">Actions</span>
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
@@ -147,6 +151,12 @@ export default async function PlaybooksPage() {
                       </td>
                       <td className="px-4 py-3 text-right text-muted-foreground">
                         {formatRelativeFromString(playbook.updated_at)}
+                      </td>
+                      <td className="px-4 py-3 text-right">
+                        <PlaybookQuickExecuteDialog
+                          playbookId={playbook.playbook_id}
+                          playbookTitle={playbook.title}
+                        />
                       </td>
                     </tr>
                   ))}
